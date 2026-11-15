@@ -45,7 +45,7 @@ export class SupabaseService {
   }
 
   configure(url: string, anonKey: string): void {
-    const cleanUrl = url.trim();
+    const cleanUrl = this.normalizeUrl(url);
     const cleanKey = anonKey.trim();
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify({ url: cleanUrl, anonKey: cleanKey }));
     if (cleanUrl && cleanKey) {
@@ -56,8 +56,12 @@ export class SupabaseService {
     }
   }
 
+  private normalizeUrl(raw: string): string {
+    return raw.trim().replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+  }
+
   private initClient(url: string, anonKey: string): void {
-    this.client = createClient(url, anonKey);
+    this.client = createClient(this.normalizeUrl(url), anonKey.trim());
     this.isConfigured.set(true);
   }
 }

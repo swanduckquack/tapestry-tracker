@@ -261,6 +261,13 @@ export class ProjectStoreService {
         this.activeProjectId.set(remoteProjects[0].id);
       }
       this.saveToLocal();
+    } else if (this.projects().length > 0) {
+      // First-time sync: upload existing local projects to Supabase
+      for (const localProj of this.projects()) {
+        await client
+          .from('tapestry_projects')
+          .upsert(this.toSupabaseRow(localProj), { onConflict: 'id' });
+      }
     }
     this.syncStatus.set('synced');
   }
