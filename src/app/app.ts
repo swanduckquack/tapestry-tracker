@@ -45,33 +45,33 @@ import { SupabaseService } from './services/supabase.service';
             </select>
           }
 
-          <button type="button" class="nav-btn primary" (click)="showImport.set(true)">
+          <button type="button" class="nav-btn primary" (click)="showImport.set(true)" title="Import PDF">
             <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M8 3v10M3 8h10" stroke-linecap="round" />
             </svg>
-            Import PDF
+            <span class="btn-label">Import PDF</span>
           </button>
 
           @if (store.activeProject()) {
-            <button type="button" class="nav-btn" (click)="showLegend.set(true)">
+            <button type="button" class="nav-btn" (click)="showLegend.set(true)" title="Yarn Colors">
               <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="5.5" cy="6" r="1.5" />
                 <circle cx="10.5" cy="6" r="1.5" />
                 <circle cx="8" cy="10.5" r="1.5" />
                 <rect x="2" y="2" width="12" height="12" rx="2.5" />
               </svg>
-              Colors ({{ store.activeProject()!.colors.length }})
+              <span class="btn-label">Colors ({{ store.activeProject()!.colors.length }})</span>
             </button>
           }
 
-          <button type="button" class="nav-btn" (click)="showAuth.set(true)">
+          <button type="button" class="nav-btn" (click)="showAuth.set(true)" title="Sync Settings">
             <span
               class="sync-dot"
               [class.synced]="store.syncStatus() === 'synced'"
               [class.syncing]="store.syncStatus() === 'syncing'"
               [class.error]="store.syncStatus() === 'error'"
             ></span>
-            {{ supabase.isConfigured() ? 'Supabase Sync' : 'Local Only' }}
+            <span class="btn-label">{{ supabase.isConfigured() ? 'Supabase Sync' : 'Local Only' }}</span>
           </button>
         </div>
       </header>
@@ -342,20 +342,51 @@ import { SupabaseService } from './services/supabase.service';
     }
 
     @media (max-width: 960px) {
-      .app-shell {
-        height: auto;
-        min-height: 100dvh;
-        overflow: auto;
+      .topbar {
+        padding: 6px 10px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        height: 46px;
+      }
+
+      .brand-name {
+        display: none;
+      }
+
+      .topbar-actions {
+        flex: 1;
+        min-width: 0;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .project-select {
+        flex: 1;
+        min-width: 0;
+        max-width: none;
+        padding: 5px 8px;
+        font-size: 0.78rem;
+      }
+
+      .nav-btn {
+        padding: 6px 8px;
+        flex-shrink: 0;
+      }
+
+      .btn-label {
+        display: none;
+      }
+
+      .workspace {
+        padding: 8px;
       }
 
       .split-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: 48vh auto;
-        height: auto;
-      }
-
-      .queue-pane {
-        height: auto;
+        grid-template-rows: 36dvh 1fr;
+        gap: 8px;
+        height: 100%;
       }
     }
   `,

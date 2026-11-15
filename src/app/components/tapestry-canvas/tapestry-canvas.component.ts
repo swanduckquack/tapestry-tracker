@@ -22,12 +22,12 @@ import { SectionEngineService } from '../../services/section-engine.service';
     <div class="canvas-shell">
       <div class="canvas-toolbar">
         <div class="toolbar-group">
-          <button type="button" class="tool-btn" (click)="zoomBy(1.35)" title="Zoom in">
+          <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(1.35)" title="Zoom in">
             <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M8 3.5v9M3.5 8h9" stroke-linecap="round" />
             </svg>
           </button>
-          <button type="button" class="tool-btn" (click)="zoomBy(0.75)" title="Zoom out">
+          <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(0.75)" title="Zoom out">
             <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M3.5 8h9" stroke-linecap="round" />
             </svg>
@@ -286,12 +286,36 @@ import { SectionEngineService } from '../../services/section-engine.service';
       align-items: center;
     }
 
-    @media (max-width: 768px) {
-      .hint-text {
-        display: none;
+    @media (max-width: 960px) {
+      .canvas-shell {
+        min-height: 0;
       }
+
+      .canvas-toolbar {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(20, 20, 22, 0.86);
+        backdrop-filter: blur(6px);
+        border: 1px solid #27272a;
+        border-radius: 8px;
+        padding: 4px 8px;
+        gap: 8px;
+      }
+
+      .zoom-btn,
+      .hint-text,
       .minimap-box {
         display: none;
+      }
+
+      .tool-btn {
+        padding: 4px 8px;
+        font-size: 0.74rem;
+      }
+
+      .follow-toggle {
+        font-size: 0.74rem;
       }
     }
   `,

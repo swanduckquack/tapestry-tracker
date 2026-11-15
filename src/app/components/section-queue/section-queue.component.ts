@@ -99,9 +99,29 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
         </div>
       }
 
+      <!-- Mobile Tab Switcher (hidden on desktop) -->
+      <div class="mobile-tabs">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="mobileTab() === 'queue'"
+          (click)="mobileTab.set('queue')"
+        >
+          Up Next ({{ Math.max(0, sections().length - 1) }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="mobileTab() === 'settings'"
+          (click)="mobileTab.set('settings')"
+        >
+          Settings &amp; Jump
+        </button>
+      </div>
+
       <!-- Up Next List -->
       @if (sections().length > 1) {
-        <div class="up-next-section">
+        <div class="up-next-section" [class.mobile-hidden]="mobileTab() !== 'queue'">
           <div class="section-heading">Up Next</div>
           <div class="up-next-list">
             @for (sec of sections().slice(1); track sec.startIndex) {
@@ -132,7 +152,7 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
       }
 
       <!-- Quick Settings & Jump to Row -->
-      <div class="card controls-card">
+      <div class="card controls-card" [class.mobile-hidden]="mobileTab() !== 'settings'">
         <div class="control-row">
           <label for="maxChunk">Max stitches / card</label>
           <div class="chip-group">
@@ -543,7 +563,85 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
       width: 78px;
     }
 
-    @media (max-width: 768px) {
+    .mobile-tabs {
+      display: none;
+    }
+
+    @media (max-width: 960px) {
+      .queue-panel {
+        overflow: hidden;
+        gap: 8px;
+      }
+
+      .card {
+        padding: 9px 12px;
+      }
+
+      .mobile-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        order: 2;
+        flex-shrink: 0;
+      }
+
+      .tab-btn {
+        background: #141416;
+        color: #a1a1aa;
+        border: 1px solid #27272a;
+        border-radius: 7px;
+        padding: 7px 10px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        background: #27272a;
+        color: #f4f4f5;
+        border-color: #3f3f46;
+      }
+
+      .progress-header {
+        margin-bottom: 6px;
+      }
+
+      .up-next-section,
+      .controls-card {
+        order: 3;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+      }
+
+      .mobile-hidden {
+        display: none !important;
+      }
+
+      .active-card,
+      .done-card {
+        order: 4;
+        flex-shrink: 0;
+        padding: 10px 12px;
+        gap: 8px;
+        margin-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      .big-swatch {
+        width: 44px;
+        height: 44px;
+        font-size: 1.15rem;
+      }
+
+      .stitch-count {
+        font-size: 1.35rem;
+      }
+
+      .complete-btn,
+      .undo-btn {
+        padding: 12px 14px;
+      }
+
       kbd {
         display: none;
       }
@@ -565,6 +663,8 @@ export class SectionQueueComponent {
   }>();
 
   readonly jumpRowInput = signal<number | null>(null);
+  readonly mobileTab = signal<'queue' | 'settings'>('queue');
+  protected readonly Math = Math;
 
   readonly totalStitches = computed(() => this.project().width * this.project().height);
   readonly progressPercent = computed(() => {
