@@ -12,10 +12,14 @@ import { PdfParserService } from '../../services/pdf-parser.service';
           <div>
             <h2>Import Pixel Stitch PDF</h2>
             <p class="subtitle">
-              Parses your multi-page Pixel Stitch PDF right in the browser — no upload needed.
+              Extracts the grid, stitch colors, and symbols directly in your browser.
             </p>
           </div>
-          <button type="button" class="close-x" (click)="closed.emit()">✕</button>
+          <button type="button" class="close-x" (click)="closed.emit()" aria-label="Close">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
 
         <div class="modal-body">
@@ -43,7 +47,10 @@ import { PdfParserService } from '../../services/pdf-parser.service';
               (drop)="onDrop($event)"
             >
               <input type="file" accept="application/pdf,.pdf" hidden (change)="onFileSelected($event)" />
-              <div class="drop-icon">📄</div>
+              <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" />
+              </svg>
               <div class="drop-title">Drop your Pixel Stitch PDF here</div>
               <div class="drop-sub">or click to browse from your device</div>
             </label>
@@ -71,7 +78,7 @@ import { PdfParserService } from '../../services/pdf-parser.service';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(2, 6, 23, 0.78);
+      background: rgba(0, 0, 0, 0.65);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -80,12 +87,13 @@ import { PdfParserService } from '../../services/pdf-parser.service';
     }
 
     .modal-card {
-      background: #111c33;
-      border: 1px solid #334155;
-      border-radius: 16px;
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 12px;
       width: 100%;
-      max-width: 520px;
-      color: #f8fafc;
+      max-width: 480px;
+      color: #f4f4f5;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       overflow: hidden;
     }
 
@@ -94,26 +102,33 @@ import { PdfParserService } from '../../services/pdf-parser.service';
       justify-content: space-between;
       align-items: flex-start;
       padding: 16px 20px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #27272a;
     }
 
     h2 {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
+      font-weight: 600;
     }
 
     .subtitle {
-      margin: 4px 0 0;
-      font-size: 0.84rem;
-      color: #94a3b8;
+      margin: 3px 0 0;
+      font-size: 0.82rem;
+      color: #a1a1aa;
     }
 
     .close-x {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 1.2rem;
+      color: #a1a1aa;
       cursor: pointer;
+      padding: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     .modal-body {
@@ -124,84 +139,87 @@ import { PdfParserService } from '../../services/pdf-parser.service';
     }
 
     .dropzone {
-      border: 2px dashed #334155;
-      border-radius: 14px;
-      padding: 32px 20px;
+      border: 1.5px dashed #3f3f46;
+      border-radius: 10px;
+      padding: 28px 20px;
       text-align: center;
       cursor: pointer;
-      background: #0f172a;
+      background: #18181b;
       transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .dropzone:hover,
     .dropzone.dragging {
-      border-color: #38bdf8;
-      background: #13223f;
+      border-color: #f4f4f5;
+      background: #27272a;
     }
 
     .drop-icon {
-      font-size: 2.2rem;
+      width: 28px;
+      height: 28px;
+      color: #a1a1aa;
       margin-bottom: 8px;
     }
 
     .drop-title {
-      font-weight: 700;
-      font-size: 1rem;
+      font-weight: 600;
+      font-size: 0.92rem;
     }
 
     .drop-sub {
-      font-size: 0.84rem;
-      color: #94a3b8;
-      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #a1a1aa;
+      margin-top: 3px;
     }
 
     .progress-box {
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 18px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 16px;
       text-align: center;
     }
 
     .progress-msg {
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 0.88rem;
       margin-bottom: 10px;
     }
 
     .progress-track {
-      height: 8px;
-      background: #1e293b;
+      height: 6px;
+      background: #27272a;
       border-radius: 999px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: #38bdf8;
+      background: #f4f4f5;
       transition: width 0.15s ease;
     }
 
     .progress-sub {
       margin-top: 8px;
-      font-size: 0.8rem;
-      color: #94a3b8;
+      font-size: 0.78rem;
+      color: #a1a1aa;
     }
 
     .error-box {
-      background: rgba(239, 68, 68, 0.14);
-      border: 1px solid #ef4444;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid #7f1d1d;
       color: #fca5a5;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 10px 12px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
     }
 
     .divider {
       display: flex;
       align-items: center;
       gap: 10px;
-      color: #64748b;
-      font-size: 0.8rem;
+      color: #71717a;
+      font-size: 0.78rem;
     }
 
     .divider::before,
@@ -209,21 +227,22 @@ import { PdfParserService } from '../../services/pdf-parser.service';
       content: '';
       flex: 1;
       height: 1px;
-      background: #1e293b;
+      background: #27272a;
     }
 
     .sample-btn {
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 11px 14px;
-      font-weight: 600;
+      background: #18181b;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
     }
 
     .sample-btn:hover:not(:disabled) {
-      background: #334155;
+      background: #27272a;
     }
   `,
 })

@@ -1,7 +1,6 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { StitchDirection, StitchSection, TapestryProject } from '../../models/tapestry.model';
-import { SectionEngineService } from '../../services/section-engine.service';
 
 @Component({
   selector: 'app-section-queue',
@@ -10,9 +9,9 @@ import { SectionEngineService } from '../../services/section-engine.service';
   template: `
     <div class="queue-panel">
       <!-- Overall Progress -->
-      <div class="progress-card">
+      <div class="card">
         <div class="progress-header">
-          <div>
+          <div class="progress-text">
             <span class="progress-pct">{{ progressPercent() }}%</span>
             <span class="progress-counts">
               {{ project().completedCount.toLocaleString() }} / {{ totalStitches().toLocaleString() }}
@@ -21,7 +20,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
           </div>
           @if (sections()[0]; as active) {
             <span class="row-pill">
-              Row {{ active.displayRow }} • {{ active.sideLabel }}
+              Row {{ active.displayRow }} · {{ active.sideLabel }}
               {{ active.rowDirection === 'rtl' ? '←' : '→' }}
             </span>
           }
@@ -36,10 +35,9 @@ import { SectionEngineService } from '../../services/section-engine.service';
         @let color = getColor(active.colorIndex);
         <div class="active-card">
           <div class="active-top">
-            <span class="badge-now">STITCH NOW</span>
+            <span class="badge-now">Current Section</span>
             <span class="dir-tag">
-              Row {{ active.displayRow }} • Cols {{ active.startCol }}
-              {{ active.rowDirection === 'rtl' ? '→' : '→' }} {{ active.endCol }} ({{
+              Row {{ active.displayRow }} · Cols {{ active.startCol }}–{{ active.endCol }} ({{
                 active.rowDirection === 'rtl' ? 'R to L' : 'L to R'
               }})
             </span>
@@ -49,7 +47,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
             <div
               class="big-swatch"
               [style.background]="color.hex"
-              [style.color]="isLightHex(color.hex) ? '#0f172a' : '#ffffff'"
+              [style.color]="isLightHex(color.hex) ? '#18181b' : '#ffffff'"
             >
               {{ color.symbol }}
             </div>
@@ -64,12 +62,12 @@ import { SectionEngineService } from '../../services/section-engine.service';
           </div>
 
           <div class="active-actions">
-            <button
-              type="button"
-              class="complete-btn"
-              (click)="completeClicked.emit()"
-            >
-              ✓ Mark Completed <kbd>Space</kbd>
+            <button type="button" class="complete-btn" (click)="completeClicked.emit()">
+              <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3.5 8.5l3 3 6-6.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Mark Completed
+              <kbd>Space</kbd>
             </button>
             <button
               type="button"
@@ -78,19 +76,25 @@ import { SectionEngineService } from '../../services/section-engine.service';
               (click)="undoClicked.emit()"
               title="Undo last completion (Z)"
             >
-              ↩ Undo <kbd>Z</kbd>
+              <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M4.5 6.5H10a3.5 3.5 0 1 1 0 7H7" stroke-linecap="round" />
+                <path d="M6.5 4L4 6.5 6.5 9" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Undo
+              <kbd>Z</kbd>
             </button>
           </div>
         </div>
       } @else {
-        <div class="done-card">
-          <div class="done-emoji">🎉</div>
-          <h3>Tapestry Complete!</h3>
+        <div class="card done-card">
+          <svg class="done-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8.5 12.5l2.5 2.5 4.5-5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <h3>Tapestry Complete</h3>
           <p>All {{ totalStitches().toLocaleString() }} stitches have been marked off.</p>
           @if (canUndo()) {
-            <button type="button" class="undo-btn" (click)="undoClicked.emit()">
-              ↩ Undo Last
-            </button>
+            <button type="button" class="undo-btn" (click)="undoClicked.emit()">Undo Last</button>
           }
         </div>
       }
@@ -106,7 +110,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
                 <div
                   class="mini-swatch"
                   [style.background]="c.hex"
-                  [style.color]="isLightHex(c.hex) ? '#0f172a' : '#ffffff'"
+                  [style.color]="isLightHex(c.hex) ? '#18181b' : '#ffffff'"
                 >
                   {{ c.symbol }}
                 </div>
@@ -116,7 +120,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
                   </div>
                   <div class="next-meta">
                     Row {{ sec.displayRow }} ({{ sec.sideLabel }}
-                    {{ sec.rowDirection === 'rtl' ? '←' : '→' }}) • Cols {{ sec.startCol }}–{{
+                    {{ sec.rowDirection === 'rtl' ? '←' : '→' }}) · Cols {{ sec.startCol }}–{{
                       sec.endCol
                     }}
                   </div>
@@ -128,7 +132,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
       }
 
       <!-- Quick Settings & Jump to Row -->
-      <div class="controls-card">
+      <div class="card controls-card">
         <div class="control-row">
           <label for="maxChunk">Max stitches / card</label>
           <div class="chip-group">
@@ -139,7 +143,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
                 [class.active]="project().maxChunkStitches === preset"
                 (click)="settingsChanged.emit({ maxChunkStitches: preset })"
               >
-                {{ preset === 0 ? 'Full Run' : preset }}
+                {{ preset === 0 ? 'All' : preset }}
               </button>
             }
             <input
@@ -209,16 +213,15 @@ import { SectionEngineService } from '../../services/section-engine.service';
     .queue-panel {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
       height: 100%;
       overflow-y: auto;
     }
 
-    .progress-card,
-    .controls-card {
-      background: #111c33;
-      border: 1px solid #1e293b;
-      border-radius: 14px;
+    .card {
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 10px;
       padding: 12px 14px;
     }
 
@@ -231,48 +234,48 @@ import { SectionEngineService } from '../../services/section-engine.service';
     }
 
     .progress-pct {
-      font-size: 1.15rem;
+      font-size: 1rem;
       font-weight: 700;
-      color: #38bdf8;
+      color: #f4f4f5;
       margin-right: 8px;
     }
 
     .progress-counts {
-      font-size: 0.85rem;
-      color: #94a3b8;
+      font-size: 0.8rem;
+      color: #a1a1aa;
     }
 
     .row-pill {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 4px 10px;
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
+      padding: 3px 9px;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
     }
 
     .progress-track {
-      height: 8px;
-      background: #0f172a;
+      height: 6px;
+      background: #27272a;
       border-radius: 999px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      background: #f4f4f5;
       transition: width 0.2s ease;
     }
 
     .active-card {
-      background: linear-gradient(180deg, #16233d 0%, #111c33 100%);
-      border: 2px solid #38bdf8;
-      border-radius: 16px;
-      padding: 16px;
+      background: #141416;
+      border: 1.5px solid #e4e4e7;
+      border-radius: 10px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 10px 30px rgba(2, 132, 199, 0.18);
+      gap: 12px;
     }
 
     .active-top {
@@ -284,107 +287,109 @@ import { SectionEngineService } from '../../services/section-engine.service';
     }
 
     .badge-now {
-      background: #0284c7;
-      color: #fff;
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      padding: 3px 8px;
-      border-radius: 6px;
+      background: #27272a;
+      color: #f4f4f5;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 5px;
     }
 
     .dir-tag {
-      font-size: 0.82rem;
-      color: #cbd5e1;
+      font-size: 0.78rem;
+      color: #a1a1aa;
       font-weight: 500;
     }
 
     .active-main {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .big-swatch {
-      width: 68px;
-      height: 68px;
-      border-radius: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      width: 58px;
+      height: 58px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: ui-monospace, monospace;
-      font-size: 1.7rem;
-      font-weight: 800;
+      font-size: 1.45rem;
+      font-weight: 700;
       flex-shrink: 0;
     }
 
     .stitch-count {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #f8fafc;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #f4f4f5;
       line-height: 1.1;
     }
 
     .stitch-count span {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: #94a3b8;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #a1a1aa;
     }
 
     .color-name {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #e2e8f0;
-      margin-top: 4px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #d4d4d8;
+      margin-top: 3px;
     }
 
     .active-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+    }
+
+    .icon {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
     }
 
     .complete-btn {
       flex: 1;
-      background: #10b981;
-      color: #052e16;
+      background: #f4f4f5;
+      color: #09090b;
       border: none;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 1.02rem;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.08s ease, background 0.15s ease;
-    }
-
-    .complete-btn:hover {
-      background: #34d399;
-    }
-
-    .complete-btn:active {
-      transform: scale(0.98);
-    }
-
-    .undo-btn {
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 0.92rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .complete-btn:hover {
+      background: #e4e4e7;
+    }
+
+    .undo-btn {
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .undo-btn:hover:not(:disabled) {
-      background: #334155;
+      background: #27272a;
     }
 
     .undo-btn:disabled {
@@ -393,80 +398,91 @@ import { SectionEngineService } from '../../services/section-engine.service';
     }
 
     kbd {
-      background: rgba(0, 0, 0, 0.22);
-      padding: 2px 6px;
-      border-radius: 5px;
-      font-size: 0.72rem;
+      background: rgba(128, 128, 128, 0.22);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.68rem;
       font-family: ui-monospace, monospace;
     }
 
     .done-card {
-      background: #111c33;
-      border: 2px solid #10b981;
-      border-radius: 16px;
-      padding: 24px;
       text-align: center;
-      color: #f8fafc;
+      padding: 24px;
     }
 
-    .done-emoji {
-      font-size: 2.2rem;
-      margin-bottom: 8px;
+    .done-icon {
+      width: 28px;
+      height: 28px;
+      color: #22c55e;
+      margin-bottom: 6px;
+    }
+
+    .done-card h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      color: #f4f4f5;
+    }
+
+    .done-card p {
+      margin: 0 0 14px;
+      font-size: 0.85rem;
+      color: #a1a1aa;
     }
 
     .up-next-section {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .section-heading {
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.72rem;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #94a3b8;
+      color: #71717a;
       padding-left: 2px;
     }
 
     .up-next-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .next-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: #111c33;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 10px 12px;
+      gap: 10px;
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 8px 10px;
     }
 
     .mini-swatch {
-      width: 38px;
-      height: 38px;
-      border-radius: 9px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: ui-monospace, monospace;
       font-weight: 700;
+      font-size: 0.85rem;
       flex-shrink: 0;
     }
 
     .next-primary {
-      font-size: 0.95rem;
-      color: #f1f5f9;
+      font-size: 0.86rem;
+      color: #f4f4f5;
     }
 
     .next-meta {
-      font-size: 0.78rem;
-      color: #94a3b8;
-      margin-top: 2px;
+      font-size: 0.75rem;
+      color: #a1a1aa;
+      margin-top: 1px;
     }
 
     .controls-card {
@@ -481,50 +497,50 @@ import { SectionEngineService } from '../../services/section-engine.service';
       justify-content: space-between;
       gap: 10px;
       flex-wrap: wrap;
-      font-size: 0.83rem;
-      color: #cbd5e1;
+      font-size: 0.8rem;
+      color: #a1a1aa;
     }
 
     .chip-group,
     .jump-row-group {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .chip {
-      background: #1e293b;
-      color: #cbd5e1;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 0.78rem;
-      font-weight: 600;
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 0.75rem;
+      font-weight: 500;
       cursor: pointer;
     }
 
     .chip.active {
-      background: #0284c7;
-      border-color: #38bdf8;
-      color: #fff;
+      background: #f4f4f5;
+      border-color: #f4f4f5;
+      color: #09090b;
     }
 
     .num-input,
     .select-input {
-      background: #0f172a;
-      color: #f8fafc;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 5px 8px;
-      font-size: 0.8rem;
+      background: #18181b;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.78rem;
     }
 
     .num-input {
-      width: 60px;
+      width: 54px;
     }
 
     .num-input.wide {
-      width: 82px;
+      width: 78px;
     }
 
     @media (max-width: 768px) {
@@ -535,8 +551,6 @@ import { SectionEngineService } from '../../services/section-engine.service';
   `,
 })
 export class SectionQueueComponent {
-  private readonly engine = inject(SectionEngineService);
-
   readonly project = input.required<TapestryProject>();
   readonly sections = input<StitchSection[]>([]);
   readonly canUndo = input(false);
@@ -564,7 +578,7 @@ export class SectionQueueComponent {
       this.project().colors[index] ?? {
         id: 'unknown',
         symbol: '?',
-        hex: '#64748b',
+        hex: '#a1a1aa',
         name: 'Unknown',
       }
     );
@@ -575,10 +589,8 @@ export class SectionQueueComponent {
     const proj = this.project();
     if (!rowNum || rowNum < 1 || rowNum > proj.height) return;
 
-    const visualRow = rowNum - 1;
-    const isBottomUp = proj.direction.startsWith('bottom-up');
-    const stitchRowIndex = isBottomUp ? proj.height - 1 - visualRow : visualRow;
-    const targetCount = stitchRowIndex * proj.width;
+    // Row 1 is always the first row in the active stitching order (bottom for bottom-up, top for top-down)
+    const targetCount = (rowNum - 1) * proj.width;
     this.jumpToCountClicked.emit(targetCount);
   }
 

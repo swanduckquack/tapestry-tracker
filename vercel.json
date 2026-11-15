@@ -1,0 +1,10 @@
+{
+  "buildCommand": "node scripts/write-env.mjs && npm run build",
+  "outputDirectory": "dist/tapestry-tracker/browser",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

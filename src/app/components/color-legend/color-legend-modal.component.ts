@@ -15,7 +15,11 @@ import { SectionEngineService } from '../../services/section-engine.service';
             <h2>Yarn Color Legend ({{ project().colors.length }})</h2>
             <p class="subtitle">Rename extracted colors to your yarn names or merge similar shades.</p>
           </div>
-          <button type="button" class="close-x" (click)="closed.emit()">✕</button>
+          <button type="button" class="close-x" (click)="closed.emit()" aria-label="Close">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
 
         <div class="legend-list">
@@ -24,7 +28,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
               <div
                 class="swatch"
                 [style.background]="color.hex"
-                [style.color]="isLightHex(color.hex) ? '#0f172a' : '#ffffff'"
+                [style.color]="isLightHex(color.hex) ? '#18181b' : '#ffffff'"
               >
                 {{ color.symbol }}
               </div>
@@ -38,7 +42,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
                   placeholder="Yarn name..."
                 />
                 <span class="stitch-meta">
-                  {{ (colorCounts().get(color.id) ?? 0).toLocaleString() }} stitches • {{ color.hex }}
+                  {{ (colorCounts().get(color.id) ?? 0).toLocaleString() }} stitches · {{ color.hex }}
                 </span>
               </div>
 
@@ -71,7 +75,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(2, 6, 23, 0.78);
+      background: rgba(0, 0, 0, 0.65);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -80,15 +84,16 @@ import { SectionEngineService } from '../../services/section-engine.service';
     }
 
     .modal-card {
-      background: #111c33;
-      border: 1px solid #334155;
-      border-radius: 16px;
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 12px;
       width: 100%;
-      max-width: 680px;
+      max-width: 660px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      color: #f8fafc;
+      color: #f4f4f5;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       overflow: hidden;
     }
 
@@ -97,26 +102,33 @@ import { SectionEngineService } from '../../services/section-engine.service';
       align-items: flex-start;
       justify-content: space-between;
       padding: 16px 20px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #27272a;
     }
 
     h2 {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
+      font-weight: 600;
     }
 
     .subtitle {
-      margin: 4px 0 0;
-      font-size: 0.84rem;
-      color: #94a3b8;
+      margin: 3px 0 0;
+      font-size: 0.82rem;
+      color: #a1a1aa;
     }
 
     .close-x {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 1.2rem;
+      color: #a1a1aa;
       cursor: pointer;
+      padding: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     .legend-list {
@@ -124,34 +136,34 @@ import { SectionEngineService } from '../../services/section-engine.service';
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .legend-row {
       display: flex;
       align-items: center;
       gap: 12px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
       padding: 10px 12px;
       flex-wrap: wrap;
     }
 
     .legend-row.merged {
-      opacity: 0.6;
+      opacity: 0.55;
     }
 
     .swatch {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: ui-monospace, monospace;
-      font-weight: 800;
+      font-weight: 700;
       flex-shrink: 0;
     }
 
@@ -165,17 +177,17 @@ import { SectionEngineService } from '../../services/section-engine.service';
 
     .name-input,
     .merge-select {
-      background: #1e293b;
-      color: #f8fafc;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      background: #0d0d0f;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 0.82rem;
     }
 
     .stitch-meta {
-      font-size: 0.76rem;
-      color: #94a3b8;
+      font-size: 0.74rem;
+      color: #a1a1aa;
     }
 
     .merge-col {
@@ -185,8 +197,8 @@ import { SectionEngineService } from '../../services/section-engine.service';
     }
 
     .merge-label {
-      font-size: 0.7rem;
-      color: #94a3b8;
+      font-size: 0.68rem;
+      color: #a1a1aa;
       text-transform: uppercase;
     }
   `,

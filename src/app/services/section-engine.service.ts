@@ -130,11 +130,12 @@ export class SectionEngineService {
       }
 
       const lastCell = cells[cells.length - 1];
+      const isBottomUp = project.direction.startsWith('bottom-up');
       sections.push({
         startIndex: cursor,
         endIndex: endCursor,
         row: firstCell.row,
-        displayRow: firstCell.row + 1,
+        displayRow: isBottomUp ? project.height - firstCell.row : firstCell.row + 1,
         startCol: firstCell.col + 1,
         endCol: lastCell.col + 1,
         rowDirection: firstCell.rowDirection,

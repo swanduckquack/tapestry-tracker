@@ -39,18 +39,18 @@ describe('SectionEngineService', () => {
     const project = sampleProject();
     const sections = service.getUpcomingSections(project, 10);
 
-    // Bottom row (row 2, displayRow 3) worked RTL: col 3 is c1(1), then cols 2,1,0 are c0(3)
-    expect(sections[0].displayRow).toBe(3);
+    // Bottom row (row 2, displayRow 1 from bottom) worked RTL: col 3 is c1(1), then cols 2,1,0 are c0(3)
+    expect(sections[0].displayRow).toBe(1);
     expect(sections[0].rowDirection).toBe('rtl');
     expect(sections[0].sideLabel).toBe('RS');
     expect(sections[0].colorId).toBe('c1');
     expect(sections[0].count).toBe(1);
 
-    expect(sections[1].displayRow).toBe(3);
+    expect(sections[1].displayRow).toBe(1);
     expect(sections[1].colorId).toBe('c0');
     expect(sections[1].count).toBe(3);
 
-    // Middle row (row 1, displayRow 2) worked LTR: col 0 is c1(1), cols 1,2,3 are c2(3)
+    // Middle row (row 1, displayRow 2 from bottom) worked LTR: col 0 is c1(1), cols 1,2,3 are c2(3)
     expect(sections[2].displayRow).toBe(2);
     expect(sections[2].rowDirection).toBe('ltr');
     expect(sections[2].sideLabel).toBe('WS');

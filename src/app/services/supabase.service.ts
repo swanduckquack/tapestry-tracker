@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 
 const CONFIG_STORAGE_KEY = 'tapestry_supabase_config';
@@ -14,8 +14,6 @@ export class SupabaseService {
   private client: SupabaseClient | null = null;
 
   readonly isConfigured = signal(false);
-  readonly user = signal<User | null>(null);
-  readonly authError = signal<string | null>(null);
 
   constructor() {
     const saved = this.loadConfig();
@@ -55,48 +53,11 @@ export class SupabaseService {
     } else {
       this.client = null;
       this.isConfigured.set(false);
-      this.user.set(null);
     }
   }
 
   private initClient(url: string, anonKey: string): void {
     this.client = createClient(url, anonKey);
     this.isConfigured.set(true);
-
-    this.client.auth.getSession().then(({ data }) => {
-      this.user.set(data.session?.user ?? null);
-    });
-
-    this.client.auth.onAuthStateChange((_event, session) => {
-      this.user.set(session?.user ?? null);
-    });
-  }
-
-  async signIn(email: string, password: string): Promise<boolean> {
-    if (!this.client) return false;
-    this.authError.set(null);
-    const { error } = await this.client.auth.signInWithPassword({ email, password });
-    if (error) {
-      this.authError.set(error.message);
-      return false;
-    }
-    return true;
-  }
-
-  async signUp(email: string, password: string): Promise<boolean> {
-    if (!this.client) return false;
-    this.authError.set(null);
-    const { error } = await this.client.auth.signUp({ email, password });
-    if (error) {
-      this.authError.set(error.message);
-      return false;
-    }
-    return true;
-  }
-
-  async signOut(): Promise<void> {
-    if (!this.client) return;
-    await this.client.auth.signOut();
-    this.user.set(null);
   }
 }

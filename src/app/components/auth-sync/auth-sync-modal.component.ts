@@ -11,110 +11,54 @@ import { SupabaseService } from '../../services/supabase.service';
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
-            <h2>Supabase Sync &amp; Account</h2>
+            <h2>Supabase Sync</h2>
             <p class="subtitle">
-              Sync your tapestries &amp; stitch progress across devices, or continue locally.
+              Connect your personal Supabase project to sync tapestries &amp; progress across
+              devices.
             </p>
           </div>
-          <button type="button" class="close-x" (click)="closed.emit()">✕</button>
+          <button type="button" class="close-x" (click)="closed.emit()" aria-label="Close">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
 
         <div class="modal-body">
-          @if (supabase.user(); as user) {
-            <div class="signed-in-box">
-              <div>
-                <div class="status-label">Signed in as</div>
-                <div class="user-email">{{ user.email }}</div>
-              </div>
-              <button type="button" class="secondary-btn" (click)="supabase.signOut()">
-                Sign Out
-              </button>
-            </div>
-          } @else {
-            <!-- Supabase Project Config -->
-            <details [open]="!supabase.isConfigured()" class="config-details">
-              <summary>
-                Supabase Project Settings
-                <span class="badge">{{ supabase.isConfigured() ? 'Configured' : 'Not set' }}</span>
-              </summary>
-              <div class="config-form">
-                <label>
-                  <span>Supabase URL</span>
-                  <input
-                    type="url"
-                    class="text-input"
-                    [(ngModel)]="supabaseUrl"
-                    placeholder="https://xxxxx.supabase.co"
-                  />
-                </label>
-                <label>
-                  <span>Anon Public Key</span>
-                  <input
-                    type="password"
-                    class="text-input"
-                    [(ngModel)]="supabaseAnonKey"
-                    placeholder="eyJhbGciOi..."
-                  />
-                </label>
-                <button type="button" class="secondary-btn" (click)="saveConfig()">
-                  Save Connection
-                </button>
-              </div>
-            </details>
+          <label>
+            <span>Supabase Project URL</span>
+            <input
+              type="url"
+              class="text-input"
+              [(ngModel)]="supabaseUrl"
+              placeholder="https://xxxxx.supabase.co"
+            />
+          </label>
 
-            @if (supabase.isConfigured()) {
-              <div class="auth-form">
-                <label>
-                  <span>Email</span>
-                  <input
-                    type="email"
-                    class="text-input"
-                    [(ngModel)]="email"
-                    placeholder="you@example.com"
-                  />
-                </label>
-                <label>
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    class="text-input"
-                    [(ngModel)]="password"
-                    placeholder="••••••••"
-                  />
-                </label>
+          <label>
+            <span>Publishable Key</span>
+            <input
+              type="password"
+              class="text-input"
+              [(ngModel)]="supabaseAnonKey"
+              placeholder="sb_publishable_..."
+            />
+          </label>
 
-                @if (supabase.authError(); as err) {
-                  <div class="error-box">{{ err }}</div>
-                }
-                @if (infoMsg()) {
-                  <div class="info-box">{{ infoMsg() }}</div>
-                }
-
-                <div class="auth-actions">
-                  <button
-                    type="button"
-                    class="primary-btn"
-                    [disabled]="loading()"
-                    (click)="onSignIn()"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
-                    class="secondary-btn"
-                    [disabled]="loading()"
-                    (click)="onSignUp()"
-                  >
-                    Create Account
-                  </button>
-                </div>
-              </div>
-            }
+          @if (savedMsg()) {
+            <div class="info-box">{{ savedMsg() }}</div>
           }
 
-          <button type="button" class="local-btn" (click)="closed.emit()">
-            Continue Locally (Saved in Browser)
-          </button>
+          <div class="actions">
+            <button type="button" class="primary-btn" (click)="saveConfig()">
+              Save &amp; Connect
+            </button>
+            @if (supabase.isConfigured()) {
+              <button type="button" class="secondary-btn" (click)="disconnect()">
+                Use Local Only
+              </button>
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -123,7 +67,7 @@ import { SupabaseService } from '../../services/supabase.service';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(2, 6, 23, 0.78);
+      background: rgba(0, 0, 0, 0.65);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -132,12 +76,13 @@ import { SupabaseService } from '../../services/supabase.service';
     }
 
     .modal-card {
-      background: #111c33;
-      border: 1px solid #334155;
-      border-radius: 16px;
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 12px;
       width: 100%;
-      max-width: 460px;
-      color: #f8fafc;
+      max-width: 440px;
+      color: #f4f4f5;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       overflow: hidden;
     }
 
@@ -146,65 +91,40 @@ import { SupabaseService } from '../../services/supabase.service';
       justify-content: space-between;
       align-items: flex-start;
       padding: 16px 20px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #27272a;
     }
 
     h2 {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
+      font-weight: 600;
     }
 
     .subtitle {
-      margin: 4px 0 0;
-      font-size: 0.84rem;
-      color: #94a3b8;
+      margin: 3px 0 0;
+      font-size: 0.82rem;
+      color: #a1a1aa;
     }
 
     .close-x {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 1.2rem;
+      color: #a1a1aa;
       cursor: pointer;
+      padding: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     .modal-body {
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-    }
-
-    .config-details {
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 10px 14px;
-    }
-
-    summary {
-      cursor: pointer;
-      font-size: 0.88rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .badge {
-      background: #1e293b;
-      color: #94a3b8;
-      font-size: 0.72rem;
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-
-    .config-form,
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 12px;
     }
 
     label {
@@ -212,96 +132,54 @@ import { SupabaseService } from '../../services/supabase.service';
       flex-direction: column;
       gap: 4px;
       font-size: 0.8rem;
-      color: #cbd5e1;
+      color: #a1a1aa;
     }
 
     .text-input {
-      background: #0f172a;
-      color: #f8fafc;
-      border: 1px solid #334155;
-      border-radius: 8px;
+      background: #0d0d0f;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+      border-radius: 7px;
       padding: 8px 10px;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
     }
 
-    .auth-actions {
+    .actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-top: 4px;
     }
 
     .primary-btn {
       flex: 1;
-      background: #0284c7;
-      color: #fff;
+      background: #f4f4f5;
+      color: #09090b;
       border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 700;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
     }
 
     .secondary-btn {
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .local-btn {
-      background: transparent;
-      color: #94a3b8;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .local-btn:hover {
-      color: #e2e8f0;
-      border-color: #334155;
-    }
-
-    .signed-in-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0f172a;
-      border: 1px solid #10b981;
-      border-radius: 12px;
-      padding: 12px 14px;
-    }
-
-    .status-label {
-      font-size: 0.75rem;
-      color: #34d399;
-    }
-
-    .user-email {
-      font-weight: 700;
-      font-size: 0.92rem;
-    }
-
-    .error-box {
-      background: rgba(239, 68, 68, 0.14);
-      border: 1px solid #ef4444;
-      color: #fca5a5;
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
       border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.82rem;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
     }
 
     .info-box {
-      background: rgba(16, 185, 129, 0.14);
-      border: 1px solid #10b981;
-      color: #6ee7b7;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid #166534;
+      color: #86efac;
       border-radius: 8px;
       padding: 8px 10px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
     }
   `,
 })
@@ -311,33 +189,17 @@ export class AuthSyncModalComponent {
 
   supabaseUrl = this.supabase.loadConfig().url;
   supabaseAnonKey = this.supabase.loadConfig().anonKey;
-  email = '';
-  password = '';
-
-  readonly loading = signal(false);
-  readonly infoMsg = signal<string | null>(null);
+  readonly savedMsg = signal<string | null>(null);
 
   saveConfig(): void {
     this.supabase.configure(this.supabaseUrl, this.supabaseAnonKey);
+    this.savedMsg.set('Connected. Your projects will sync automatically.');
   }
 
-  async onSignIn(): Promise<void> {
-    this.loading.set(true);
-    this.infoMsg.set(null);
-    const ok = await this.supabase.signIn(this.email, this.password);
-    this.loading.set(false);
-    if (ok) {
-      this.closed.emit();
-    }
-  }
-
-  async onSignUp(): Promise<void> {
-    this.loading.set(true);
-    this.infoMsg.set(null);
-    const ok = await this.supabase.signUp(this.email, this.password);
-    this.loading.set(false);
-    if (ok) {
-      this.infoMsg.set('Account created! Check your email if confirmation is enabled.');
-    }
+  disconnect(): void {
+    this.supabaseUrl = '';
+    this.supabaseAnonKey = '';
+    this.supabase.configure('', '');
+    this.savedMsg.set('Switched to local-only mode.');
   }
 }

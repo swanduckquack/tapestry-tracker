@@ -23,7 +23,6 @@ interface StoredProjectDto {
 
 interface SupabaseRow {
   id: string;
-  user_id: string;
   name: string;
   width: number;
   height: number;
@@ -64,10 +63,9 @@ export class ProjectStoreService {
     this.loadFromLocal();
 
     effect(() => {
-      const user = this.supabase.user();
-      if (user) {
+      if (this.supabase.isConfigured()) {
         this.loadFromSupabase();
-        this.subscribeRealtime(user.id);
+        this.subscribeRealtime();
       } else {
         this.unsubscribeRealtime();
         this.syncStatus.set('local');
@@ -97,9 +95,8 @@ export class ProjectStoreService {
     this.saveToLocal();
 
     const client = this.supabase.getClient();
-    const user = this.supabase.user();
-    if (client && user) {
-      client.from('tapestry_projects').delete().eq('id', id).eq('user_id', user.id).then();
+    if (client && this.supabase.isConfigured()) {
+      client.from('tapestry_projects').delete().eq('id', id).then();
     }
   }
 
@@ -174,14 +171,13 @@ export class ProjectStoreService {
     this.saveToLocal();
 
     const client = this.supabase.getClient();
-    const user = this.supabase.user();
-    if (!client || !user) return;
+    if (!client || !this.supabase.isConfigured()) return;
 
     if (this.saveTimer) clearTimeout(this.saveTimer);
     this.syncStatus.set('syncing');
 
     this.saveTimer = setTimeout(async () => {
-      const row = this.toSupabaseRow(changedProject, user.id);
+      const row = this.toSupabaseRow(changedProject);
       const { error } = await client.from('tapestry_projects').upsert(row, { onConflict: 'id' });
       this.syncStatus.set(error ? 'error' : 'synced');
     }, 450);
@@ -245,14 +241,12 @@ export class ProjectStoreService {
 
   private async loadFromSupabase(): Promise<void> {
     const client = this.supabase.getClient();
-    const user = this.supabase.user();
-    if (!client || !user) return;
+    if (!client || !this.supabase.isConfigured()) return;
 
     this.syncStatus.set('syncing');
     const { data, error } = await client
       .from('tapestry_projects')
       .select('*')
-      .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
     if (error) {
@@ -271,20 +265,19 @@ export class ProjectStoreService {
     this.syncStatus.set('synced');
   }
 
-  private subscribeRealtime(userId: string): void {
+  private subscribeRealtime(): void {
     const client = this.supabase.getClient();
     if (!client) return;
     this.unsubscribeRealtime();
 
     this.realtimeChannel = client
-      .channel(`tapestry_projects:${userId}`)
+      .channel('tapestry_projects:all')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'tapestry_projects',
-          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           if (payload.eventType === 'DELETE') {
@@ -315,10 +308,9 @@ export class ProjectStoreService {
     }
   }
 
-  private toSupabaseRow(project: TapestryProject, userId: string): SupabaseRow {
+  private toSupabaseRow(project: TapestryProject): SupabaseRow {
     return {
       id: project.id,
-      user_id: userId,
       name: project.name,
       width: project.width,
       height: project.height,
