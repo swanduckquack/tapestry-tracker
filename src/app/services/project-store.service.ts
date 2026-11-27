@@ -7,6 +7,7 @@ import { SupabaseService } from './supabase.service';
 const LOCAL_PROJECTS_KEY = 'tapestry_projects_v1';
 const ACTIVE_PROJECT_KEY = 'tapestry_active_project_id';
 const CM_PER_STITCH_KEY = 'tapestry_cm_per_stitch';
+const ROW_CELEBRATION_KEY = 'tapestry_row_celebration';
 
 interface StoredProjectDto {
   id: string;
@@ -46,8 +47,10 @@ export class ProjectStoreService {
   readonly undoStack = signal<number[]>([]);
   readonly syncStatus = signal<'local' | 'syncing' | 'synced' | 'error'>('local');
   readonly cmPerStitch = signal<number>(this.loadCmPerStitch());
+  readonly rowCelebrationEnabled = signal<boolean>(this.loadRowCelebrationEnabled());
   readonly rowCompletedEvent = signal<{
     completedRow: number;
+    completedVisualRow: number;
     nextRow: number | null;
     nextDir: 'rtl' | 'ltr' | null;
     seq: number;
@@ -137,12 +140,17 @@ export class ProjectStoreService {
   }
 
   private checkRowCompletion(project: TapestryProject, prevCount: number, newCount: number): void {
+    if (!this.rowCelebrationEnabled()) return;
+
     const prevRowIdx = Math.floor(prevCount / project.width);
     const nextRowIdx = Math.floor(newCount / project.width);
     if (nextRowIdx <= prevRowIdx) return;
 
     const total = project.width * project.height;
     const completedRow = prevRowIdx + 1;
+    const isBottomUp = project.direction.startsWith('bottom-up');
+    const completedVisualRow = isBottomUp ? project.height - 1 - prevRowIdx : prevRowIdx;
+
     let nextRow: number | null = null;
     let nextDir: 'rtl' | 'ltr' | null = null;
 
@@ -159,13 +167,15 @@ export class ProjectStoreService {
 
     this.rowCompletedEvent.set({
       completedRow,
+      completedVisualRow,
       nextRow,
       nextDir,
       seq: ++this.rowEventSeq,
     });
 
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([18, 36, 24]);
+      // Rhythmic triple cascade pulse matching the downward glow wave
+      navigator.vibrate([14, 28, 20, 28, 34]);
     }
   }
 
@@ -202,9 +212,19 @@ export class ProjectStoreService {
     localStorage.setItem(CM_PER_STITCH_KEY, String(clean));
   }
 
+  setRowCelebrationEnabled(enabled: boolean): void {
+    this.rowCelebrationEnabled.set(enabled);
+    localStorage.setItem(ROW_CELEBRATION_KEY, String(enabled));
+  }
+
   private loadCmPerStitch(): number {
     const raw = Number(localStorage.getItem(CM_PER_STITCH_KEY));
     return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  }
+
+  private loadRowCelebrationEnabled(): boolean {
+    const raw = localStorage.getItem(ROW_CELEBRATION_KEY);
+    return raw === null ? true : raw === 'true';
   }
 
   renameColor(colorId: string, newName: string): void {

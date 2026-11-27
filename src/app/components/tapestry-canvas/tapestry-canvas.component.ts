@@ -311,6 +311,7 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
 
   readonly project = input.required<TapestryProject>();
   readonly sections = input<StitchSection[]>([]);
+  readonly rowGlowEvent = input<{ visualRow: number; seq: number } | null>(null);
   readonly jumpRequested = output<number>();
 
   @ViewChild('viewport') viewportRef!: ElementRef<HTMLDivElement>;
@@ -342,9 +343,24 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
   private resizeObserver: ResizeObserver | null = null;
   private lastProjectId: string | null = null;
   private lastCompletedCount = -1;
+  private lastGlowSeq = 0;
+  private glowAnim: { visualRow: number; startTime: number; duration: number } | null = null;
   private rafPending = false;
 
   constructor() {
+    effect(() => {
+      const glow = this.rowGlowEvent();
+      if (glow && glow.seq !== this.lastGlowSeq) {
+        this.lastGlowSeq = glow.seq;
+        this.glowAnim = {
+          visualRow: glow.visualRow,
+          startTime: performance.now(),
+          duration: 720,
+        };
+        this.scheduleDraw();
+      }
+    });
+
     effect(() => {
       const proj = this.project();
       const secs = this.sections();
@@ -889,6 +905,18 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
       ctx.strokeRect(sx - 1.5, sy - 1.5, size + 3, size + 3);
     }
 
+    // 6. Subtle Tetris-style cascading row-clear glow animation
+    if (this.glowAnim) {
+      const elapsed = performance.now() - this.glowAnim.startTime;
+      const t = Math.min(1, Math.max(0, elapsed / this.glowAnim.duration));
+      if (t >= 1) {
+        this.glowAnim = null;
+      } else {
+        this.drawRowCascadeGlow(ctx, proj, this.glowAnim.visualRow, t);
+        this.scheduleDraw();
+      }
+    }
+
     // Outer border
     ctx.strokeStyle = '#3f3f46';
     ctx.lineWidth = 1;
@@ -899,6 +927,49 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
       proj.height * this.scale,
     );
 
+    ctx.restore();
+  }
+
+  private drawRowCascadeGlow(
+    ctx: CanvasRenderingContext2D,
+    proj: TapestryProject,
+    visualRow: number,
+    t: number,
+  ): void {
+    const ease = 1 - Math.pow(1 - t, 3);
+    const fade = 1 - t;
+    const tx = this.offsetX;
+    const ty = this.offsetY;
+    const tw = proj.width * this.scale;
+    const th = proj.height * this.scale;
+    const rowY = ty + visualRow * this.scale;
+    const rowH = Math.max(2, this.scale);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(tx, ty, tw, th);
+    ctx.clip();
+
+    // 1. Soft luminous highlight on the just-completed row
+    ctx.fillStyle = `rgba(255, 255, 255, ${(0.52 * fade).toFixed(3)})`;
+    ctx.fillRect(tx, rowY, tw, rowH);
+
+    // 2. Smooth light wave cascading into the completed rows below (or above if top-down)
+    const isBottomUp = proj.direction.startsWith('bottom-up');
+    const dir = isBottomUp ? 1 : -1;
+    const completedDepth = isBottomUp ? proj.height - 1 - visualRow : visualRow;
+    const travelRows = Math.max(6, Math.min(22, completedDepth + 4));
+    const waveHeight = Math.max(rowH * 4, 28);
+    const waveCenterY = rowY + rowH * 0.5 + dir * ease * travelRows * this.scale;
+
+    const grad = ctx.createLinearGradient(0, waveCenterY - waveHeight / 2, 0, waveCenterY + waveHeight / 2);
+    const peakAlpha = (0.36 * fade).toFixed(3);
+    grad.addColorStop(0, 'rgba(244, 244, 245, 0)');
+    grad.addColorStop(0.5, `rgba(244, 244, 245, ${peakAlpha})`);
+    grad.addColorStop(1, 'rgba(244, 244, 245, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(tx, waveCenterY - waveHeight / 2, tw, waveHeight);
     ctx.restore();
   }
 

@@ -55,7 +55,12 @@ import { WakeLockService } from '../../services/wake-lock.service';
               </div>
               <span class="rem-count" title="Remaining stitches in row">{{ upcomingStrip().totalStitches }}</span>
             </div>
-            <div class="yarn-strip" role="img" aria-label="Remaining stitches color strip">
+            <div
+              class="yarn-strip"
+              [class.rtl]="sections()[0]?.rowDirection === 'rtl'"
+              role="img"
+              aria-label="Remaining stitches color strip"
+            >
               @for (run of upcomingStrip().runs; track $index) {
                 <button
                   type="button"
@@ -380,6 +385,24 @@ import { WakeLockService } from '../../services/wake-lock.service';
             />
           </div>
 
+          <div class="control-row">
+            <label for="rowGlowToggle" class="ctrl-label">
+              <svg class="ctrl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M8 2l1.4 3.6L13 7l-3.6 1.4L8 12l-1.4-3.6L3 7l3.6-1.4L8 2Z" stroke-linejoin="round" />
+              </svg>
+              Row glow
+            </label>
+            <button
+              id="rowGlowToggle"
+              type="button"
+              class="chip"
+              [class.active]="rowCelebration()"
+              (click)="rowCelebrationChanged.emit(!rowCelebration())"
+            >
+              {{ rowCelebration() ? 'On' : 'Off' }}
+            </button>
+          </div>
+
           @if (wakeLock.isSupported) {
             <div class="control-row">
               <label for="wakeLockToggle" class="ctrl-label">
@@ -536,6 +559,10 @@ import { WakeLockService } from '../../services/wake-lock.service';
       overflow: hidden;
       border: 1px solid #27272a;
       background: #0d0d0f;
+    }
+
+    .yarn-strip.rtl {
+      flex-direction: row-reverse;
     }
 
     .strip-seg {
@@ -961,12 +988,14 @@ export class SectionQueueComponent {
   readonly sections = input<StitchSection[]>([]);
   readonly canUndo = input(false);
   readonly cmPerStitch = input(0);
+  readonly rowCelebration = input(true);
 
   readonly completeClicked = output<void>();
   readonly advanceStitchesClicked = output<number>();
   readonly undoClicked = output<void>();
   readonly jumpToCountClicked = output<number>();
   readonly cmPerStitchChanged = output<number>();
+  readonly rowCelebrationChanged = output<boolean>();
   readonly stripSegmentClicked = output<{ row: number; col: number }>();
   readonly settingsChanged = output<{
     direction?: StitchDirection;

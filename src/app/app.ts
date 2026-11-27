@@ -85,6 +85,7 @@ import { SupabaseService } from './services/supabase.service';
                 #canvasComp
                 [project]="project"
                 [sections]="store.upcomingSections()"
+                [rowGlowEvent]="rowGlowEvent()"
                 (jumpRequested)="store.jumpToCount($event)"
               />
             </section>
@@ -95,11 +96,13 @@ import { SupabaseService } from './services/supabase.service';
                 [sections]="store.upcomingSections()"
                 [canUndo]="store.undoStack().length > 0"
                 [cmPerStitch]="store.cmPerStitch()"
+                [rowCelebration]="store.rowCelebrationEnabled()"
                 (completeClicked)="store.completeCurrentSection()"
                 (advanceStitchesClicked)="store.advanceStitches($event)"
                 (undoClicked)="store.undo()"
                 (jumpToCountClicked)="store.jumpToCount($event)"
                 (cmPerStitchChanged)="store.setCmPerStitch($event)"
+                (rowCelebrationChanged)="store.setRowCelebrationEnabled($event)"
                 (stripSegmentClicked)="canvasComp.focusOnCell($event.row, $event.col)"
                 (settingsChanged)="store.updateProjectSettings($event)"
               />
@@ -473,6 +476,7 @@ export class App {
   readonly showImport = signal(false);
   readonly showLegend = signal(false);
   readonly showAuth = signal(false);
+  readonly rowGlowEvent = signal<{ visualRow: number; seq: number } | null>(null);
   readonly rowToast = signal<{
     completedRow: number;
     nextRow: number | null;
@@ -485,6 +489,7 @@ export class App {
     effect(() => {
       const ev = this.store.rowCompletedEvent();
       if (!ev) return;
+      this.rowGlowEvent.set({ visualRow: ev.completedVisualRow, seq: ev.seq });
       this.rowToast.set({
         completedRow: ev.completedRow,
         nextRow: ev.nextRow,
