@@ -305,20 +305,27 @@ import { SupabaseService } from './services/supabase.service';
     .workspace {
       flex: 1;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
       padding: 12px;
+      overflow: hidden;
     }
 
     .split-layout {
       display: grid;
-      grid-template-columns: 1fr 390px;
+      grid-template-columns: minmax(0, 1fr) 390px;
       gap: 12px;
       height: 100%;
+      width: 100%;
+      min-width: 0;
     }
 
     .canvas-pane,
     .queue-pane {
       min-height: 0;
+      min-width: 0;
       height: 100%;
+      overflow: hidden;
     }
 
     .empty-state {
@@ -460,7 +467,7 @@ import { SupabaseService } from './services/supabase.service';
       }
 
       .split-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: 30dvh 1fr;
         gap: 6px;
         height: 100%;

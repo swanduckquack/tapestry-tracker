@@ -456,6 +456,8 @@ import { WakeLockService } from '../../services/wake-lock.service';
       flex-direction: column;
       gap: 8px;
       height: 100%;
+      width: 100%;
+      min-width: 0;
       overflow: hidden;
     }
 
@@ -464,6 +466,8 @@ import { WakeLockService } from '../../services/wake-lock.service';
       border: 1px solid #27272a;
       border-radius: 10px;
       padding: 10px 12px;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .progress-card {
@@ -577,6 +581,8 @@ import { WakeLockService } from '../../services/wake-lock.service';
 
     .yarn-strip {
       display: flex;
+      width: 100%;
+      min-width: 0;
       height: 10px;
       border-radius: 5px;
       overflow: hidden;
@@ -590,7 +596,7 @@ import { WakeLockService } from '../../services/wake-lock.service';
 
     .strip-seg {
       flex-basis: 0;
-      min-width: 4px;
+      min-width: 0;
       height: 100%;
       border: none;
       padding: 0;
@@ -752,7 +758,7 @@ import { WakeLockService } from '../../services/wake-lock.service';
 
     .under-seg {
       flex-basis: 0;
-      min-width: 14px;
+      min-width: 0;
       display: flex;
       align-items: center;
       justify-content: center;
