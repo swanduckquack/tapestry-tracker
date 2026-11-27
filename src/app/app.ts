@@ -449,7 +449,7 @@ import { SupabaseService } from './services/supabase.service';
       }
     }
 
-    @media (max-width: 960px) {
+    @media (max-width: 960px) and (orientation: portrait), (max-width: 600px) {
       .project-select {
         flex: 1;
         max-width: none;
@@ -462,6 +462,29 @@ import { SupabaseService } from './services/supabase.service';
       .split-layout {
         grid-template-columns: 1fr;
         grid-template-rows: 36dvh 1fr;
+        gap: 8px;
+        height: 100%;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .topbar {
+        height: 38px;
+        padding: 4px 10px;
+      }
+
+      .icon-btn {
+        height: 28px;
+        min-width: 28px;
+      }
+
+      .workspace {
+        padding: 6px;
+      }
+
+      .split-layout {
+        grid-template-columns: 1fr 310px;
+        grid-template-rows: 1fr;
         gap: 8px;
         height: 100%;
       }

@@ -283,7 +283,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
       justify-content: center;
     }
 
-    @media (max-width: 960px) {
+    @media (max-width: 960px), (max-height: 520px) {
       .canvas-shell {
         min-height: 0;
       }
@@ -300,7 +300,7 @@ import { SectionEngineService } from '../../services/section-engine.service';
       .minimap-box {
         bottom: 8px;
         left: 8px;
-        transform: scale(0.68);
+        transform: scale(0.62);
         transform-origin: bottom left;
       }
     }

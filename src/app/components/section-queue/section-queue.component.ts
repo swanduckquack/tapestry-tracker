@@ -946,7 +946,7 @@ import { WakeLockService } from '../../services/wake-lock.service';
       width: 68px;
     }
 
-    @media (max-width: 960px) {
+    @media (max-width: 960px) and (orientation: portrait), (max-width: 600px) {
       .progress-card {
         order: 1;
         padding: 8px 10px;
@@ -976,6 +976,50 @@ import { WakeLockService } from '../../services/wake-lock.service';
 
       .stitch-count {
         font-size: 1.4rem;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .queue-panel {
+        gap: 5px;
+      }
+
+      .card,
+      .active-card {
+        padding: 7px 9px;
+        gap: 6px;
+      }
+
+      .progress-header {
+        margin-bottom: 4px;
+      }
+
+      .strip-wrap {
+        margin-top: 5px;
+        gap: 3px;
+      }
+
+      .yarn-strip {
+        height: 8px;
+      }
+
+      .big-swatch {
+        width: 36px;
+        height: 36px;
+        font-size: 1.05rem;
+      }
+
+      .stitch-count {
+        font-size: 1.25rem;
+      }
+
+      .complete-btn,
+      .undo-btn {
+        height: 34px;
+      }
+
+      .tab-btn {
+        height: 28px;
       }
     }
   `,
