@@ -46,6 +46,13 @@ export class ProjectStoreService {
   readonly undoStack = signal<number[]>([]);
   readonly syncStatus = signal<'local' | 'syncing' | 'synced' | 'error'>('local');
   readonly cmPerStitch = signal<number>(this.loadCmPerStitch());
+  readonly rowCompletedEvent = signal<{
+    completedRow: number;
+    nextRow: number | null;
+    nextDir: 'rtl' | 'ltr' | null;
+    seq: number;
+  } | null>(null);
+  private rowEventSeq = 0;
 
   readonly activeProject = computed(() => {
     const id = this.activeProjectId();
@@ -108,8 +115,10 @@ export class ProjectStoreService {
     if (!project || sections.length === 0) return;
 
     const current = sections[0];
-    this.undoStack.update((stack) => [...stack.slice(-49), project.completedCount]);
+    const prevCount = project.completedCount;
+    this.undoStack.update((stack) => [...stack.slice(-49), prevCount]);
     this.patchActiveProject({ completedCount: current.endIndex });
+    this.checkRowCompletion(project, prevCount, current.endIndex);
   }
 
   advanceStitches(count: number): void {
@@ -118,11 +127,46 @@ export class ProjectStoreService {
     if (!project || sections.length === 0 || count <= 0) return;
 
     const current = sections[0];
-    const target = Math.min(current.endIndex, project.completedCount + count);
-    if (target === project.completedCount) return;
+    const prevCount = project.completedCount;
+    const target = Math.min(current.endIndex, prevCount + count);
+    if (target === prevCount) return;
 
-    this.undoStack.update((stack) => [...stack.slice(-49), project.completedCount]);
+    this.undoStack.update((stack) => [...stack.slice(-49), prevCount]);
     this.patchActiveProject({ completedCount: target });
+    this.checkRowCompletion(project, prevCount, target);
+  }
+
+  private checkRowCompletion(project: TapestryProject, prevCount: number, newCount: number): void {
+    const prevRowIdx = Math.floor(prevCount / project.width);
+    const nextRowIdx = Math.floor(newCount / project.width);
+    if (nextRowIdx <= prevRowIdx) return;
+
+    const total = project.width * project.height;
+    const completedRow = prevRowIdx + 1;
+    let nextRow: number | null = null;
+    let nextDir: 'rtl' | 'ltr' | null = null;
+
+    if (newCount < total) {
+      const nextCell = this.engine.linearToCell(
+        newCount,
+        project.width,
+        project.height,
+        project.direction,
+      );
+      nextRow = nextRowIdx + 1;
+      nextDir = nextCell.rowDirection;
+    }
+
+    this.rowCompletedEvent.set({
+      completedRow,
+      nextRow,
+      nextDir,
+      seq: ++this.rowEventSeq,
+    });
+
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([18, 36, 24]);
+    }
   }
 
   undo(): void {

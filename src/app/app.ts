@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, effect, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthSyncModalComponent } from './components/auth-sync/auth-sync-modal.component';
 import { ColorLegendModalComponent } from './components/color-legend/color-legend-modal.component';
@@ -130,6 +130,29 @@ import { SupabaseService } from './services/supabase.service';
         }
       </main>
     </div>
+
+    @if (rowToast(); as toast) {
+      <div class="row-toast" role="status" aria-live="polite">
+        <svg class="toast-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="8" class="toast-ring" />
+          <path d="M6.5 10.3l2.3 2.3 4.7-5" stroke-linecap="round" stroke-linejoin="round" class="toast-tick" />
+        </svg>
+        <span class="toast-row">R{{ toast.completedRow }}</span>
+        @if (toast.nextRow && toast.nextDir) {
+          <span class="toast-sep">·</span>
+          <span class="toast-next">
+            R{{ toast.nextRow }}
+            <svg class="toast-dir" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+              @if (toast.nextDir === 'rtl') {
+                <path d="M11 7H3M6 4L3 7l3 3" stroke-linecap="round" stroke-linejoin="round" />
+              } @else {
+                <path d="M3 7h8M8 4l3 3-3 3" stroke-linecap="round" stroke-linejoin="round" />
+              }
+            </svg>
+          </span>
+        }
+      </div>
+    }
 
     @if (showImport()) {
       <app-import-modal
@@ -365,6 +388,64 @@ import { SupabaseService } from './services/supabase.service';
       background: #e4e4e7;
     }
 
+    .row-toast {
+      position: fixed;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(20, 20, 22, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid #3f3f46;
+      border-radius: 999px;
+      color: #f4f4f5;
+      font-size: 0.84rem;
+      font-weight: 600;
+      font-family: ui-monospace, monospace;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      pointer-events: none;
+      z-index: 60;
+      animation: toastPop 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .toast-check {
+      width: 18px;
+      height: 18px;
+      color: #4ade80;
+      flex-shrink: 0;
+    }
+
+    .toast-sep {
+      color: #52525b;
+    }
+
+    .toast-next {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #a1a1aa;
+    }
+
+    .toast-dir {
+      width: 13px;
+      height: 13px;
+      display: block;
+    }
+
+    @keyframes toastPop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -8px) scale(0.94);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+    }
+
     @media (max-width: 960px) {
       .project-select {
         flex: 1;
@@ -392,6 +473,27 @@ export class App {
   readonly showImport = signal(false);
   readonly showLegend = signal(false);
   readonly showAuth = signal(false);
+  readonly rowToast = signal<{
+    completedRow: number;
+    nextRow: number | null;
+    nextDir: 'rtl' | 'ltr' | null;
+  } | null>(null);
+
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    effect(() => {
+      const ev = this.store.rowCompletedEvent();
+      if (!ev) return;
+      this.rowToast.set({
+        completedRow: ev.completedRow,
+        nextRow: ev.nextRow,
+        nextDir: ev.nextDir,
+      });
+      if (this.toastTimer) clearTimeout(this.toastTimer);
+      this.toastTimer = setTimeout(() => this.rowToast.set(null), 2600);
+    });
+  }
 
   loadSample(): void {
     this.store.addProject(this.parser.createSampleProject());
