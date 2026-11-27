@@ -304,9 +304,15 @@ import { SectionEngineService } from '../../services/section-engine.service';
       }
 
       .zoom-btn,
-      .hint-text,
-      .minimap-box {
+      .hint-text {
         display: none;
+      }
+
+      .minimap-box {
+        bottom: 8px;
+        left: 8px;
+        transform: scale(0.68);
+        transform-origin: bottom left;
       }
 
       .tool-btn {

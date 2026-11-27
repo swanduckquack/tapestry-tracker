@@ -110,6 +110,19 @@ export class ProjectStoreService {
     this.patchActiveProject({ completedCount: current.endIndex });
   }
 
+  advanceStitches(count: number): void {
+    const project = this.activeProject();
+    const sections = this.upcomingSections();
+    if (!project || sections.length === 0 || count <= 0) return;
+
+    const current = sections[0];
+    const target = Math.min(current.endIndex, project.completedCount + count);
+    if (target === project.completedCount) return;
+
+    this.undoStack.update((stack) => [...stack.slice(-49), project.completedCount]);
+    this.patchActiveProject({ completedCount: target });
+  }
+
   undo(): void {
     const project = this.activeProject();
     const stack = this.undoStack();

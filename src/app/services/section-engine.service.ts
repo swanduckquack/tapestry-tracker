@@ -202,4 +202,53 @@ export class SectionEngineService {
     }
     return counts;
   }
+
+  /** Returns a proportional visual strip and per-color stitch counts for the next `windowSize` stitches in the current row. */
+  getUpcomingRowStrip(
+    project: TapestryProject,
+    windowSize = 50,
+  ): {
+    runs: Array<{ color: StitchColor; count: number }>;
+    totals: Array<{ color: StitchColor; count: number }>;
+    totalStitches: number;
+  } {
+    const total = project.width * project.height;
+    const start = Math.max(0, Math.min(project.completedCount, total));
+    if (start >= total) {
+      return { runs: [], totals: [], totalStitches: 0 };
+    }
+
+    const firstCell = this.linearToCell(start, project.width, project.height, project.direction);
+    const runs: Array<{ color: StitchColor; count: number }> = [];
+    const countByColor = new Map<number, number>();
+    let cursor = start;
+    let taken = 0;
+
+    while (cursor < total && taken < windowSize) {
+      const cell = this.linearToCell(cursor, project.width, project.height, project.direction);
+      if (cell.row !== firstCell.row) break;
+
+      const effIdx = this.resolveEffectiveColorIndex(
+        project.colors,
+        project.grid[cell.row * project.width + cell.col] ?? 0,
+      );
+      const color = project.colors[effIdx] ?? project.colors[0];
+
+      const lastRun = runs[runs.length - 1];
+      if (lastRun && lastRun.color.id === color.id) {
+        lastRun.count++;
+      } else {
+        runs.push({ color, count: 1 });
+      }
+      countByColor.set(effIdx, (countByColor.get(effIdx) ?? 0) + 1);
+      cursor++;
+      taken++;
+    }
+
+    const totals = [...countByColor.entries()]
+      .map(([idx, count]) => ({ color: project.colors[idx] ?? project.colors[0], count }))
+      .sort((a, b) => b.count - a.count);
+
+    return { runs, totals, totalStitches: taken };
+  }
 }

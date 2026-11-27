@@ -93,6 +93,7 @@ import { SupabaseService } from './services/supabase.service';
                 [sections]="store.upcomingSections()"
                 [canUndo]="store.undoStack().length > 0"
                 (completeClicked)="store.completeCurrentSection()"
+                (advanceStitchesClicked)="store.advanceStitches($event)"
                 (undoClicked)="store.undo()"
                 (jumpToCountClicked)="store.jumpToCount($event)"
                 (settingsChanged)="store.updateProjectSettings($event)"

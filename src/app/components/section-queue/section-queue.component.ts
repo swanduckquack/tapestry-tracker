@@ -1,6 +1,8 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { StitchDirection, StitchSection, TapestryProject } from '../../models/tapestry.model';
+import { SectionEngineService } from '../../services/section-engine.service';
+import { WakeLockService } from '../../services/wake-lock.service';
 
 @Component({
   selector: 'app-section-queue',
@@ -28,6 +30,37 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
         <div class="progress-track">
           <div class="progress-fill" [style.width.%]="progressPercent()"></div>
         </div>
+        @if (upcomingStrip().totalStitches > 0) {
+          <div class="strip-wrap">
+            <div class="strip-header">
+              <span>Next {{ upcomingStrip().totalStitches }} stitches in row</span>
+              <div class="strip-totals">
+                @for (t of upcomingStrip().totals; track t.color.id) {
+                  <span class="strip-total-pill" [title]="t.color.name">
+                    <span
+                      class="yarn-dot"
+                      [style.background]="t.color.hex"
+                      [style.color]="isLightHex(t.color.hex) ? '#18181b' : '#ffffff'"
+                    >
+                      {{ t.color.symbol }}
+                    </span>
+                    {{ t.count }}
+                  </span>
+                }
+              </div>
+            </div>
+            <div class="yarn-strip" role="img" aria-label="Upcoming stitches color strip">
+              @for (run of upcomingStrip().runs; track $index) {
+                <div
+                  class="strip-seg"
+                  [style.flex-grow]="run.count"
+                  [style.background]="run.color.hex"
+                  [title]="run.count + ' × ' + run.color.name"
+                ></div>
+              }
+            </div>
+          </div>
+        }
       </div>
 
       <!-- Active Section -->
@@ -60,6 +93,25 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
               <div class="color-name">{{ color.name }}</div>
             </div>
           </div>
+
+          @if (active.count > 1) {
+            <div class="step-row">
+              <span class="step-label">Count as you go</span>
+              <div class="step-buttons">
+                @for (step of [1, 5, 10]; track step) {
+                  @if (step < active.count) {
+                    <button
+                      type="button"
+                      class="step-btn"
+                      (click)="advanceStitchesClicked.emit(step)"
+                    >
+                      +{{ step }}
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          }
 
           <div class="active-actions">
             <button type="button" class="complete-btn" (click)="completeClicked.emit()">
@@ -226,6 +278,21 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
             <button type="button" class="chip" (click)="jumpToRow()">Jump</button>
           </div>
         </div>
+
+        @if (wakeLock.isSupported) {
+          <div class="control-row">
+            <label for="wakeLockToggle">Keep screen awake</label>
+            <button
+              id="wakeLockToggle"
+              type="button"
+              class="chip"
+              [class.active]="wakeLock.enabled()"
+              (click)="wakeLock.toggle()"
+            >
+              {{ wakeLock.enabled() ? 'On' : 'Off' }}
+            </button>
+          </div>
+        }
       </div>
     </div>
   `,
@@ -286,6 +353,98 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
       height: 100%;
       background: #f4f4f5;
       transition: width 0.2s ease;
+    }
+
+    .strip-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .strip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+      color: #a1a1aa;
+    }
+
+    .strip-totals {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .strip-total-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .yarn-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: ui-monospace, monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+    }
+
+    .yarn-strip {
+      display: flex;
+      height: 11px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #27272a;
+      background: #0d0d0f;
+    }
+
+    .strip-seg {
+      min-width: 2px;
+      height: 100%;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .step-label {
+      font-size: 0.74rem;
+      color: #71717a;
+    }
+
+    .step-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .step-btn {
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .step-btn:hover {
+      background: #27272a;
     }
 
     .active-card {
@@ -603,7 +762,27 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
       }
 
       .progress-header {
-        margin-bottom: 6px;
+        margin-bottom: 5px;
+      }
+
+      .strip-wrap {
+        margin-top: 7px;
+        gap: 4px;
+      }
+
+      .strip-header {
+        font-size: 0.7rem;
+        gap: 4px 8px;
+      }
+
+      .yarn-strip {
+        height: 9px;
+      }
+
+      .step-btn,
+      .complete-btn,
+      .undo-btn {
+        touch-action: manipulation;
       }
 
       .up-next-section,
@@ -649,11 +828,15 @@ import { StitchDirection, StitchSection, TapestryProject } from '../../models/ta
   `,
 })
 export class SectionQueueComponent {
+  private readonly engine = inject(SectionEngineService);
+  readonly wakeLock = inject(WakeLockService);
+
   readonly project = input.required<TapestryProject>();
   readonly sections = input<StitchSection[]>([]);
   readonly canUndo = input(false);
 
   readonly completeClicked = output<void>();
+  readonly advanceStitchesClicked = output<number>();
   readonly undoClicked = output<void>();
   readonly jumpToCountClicked = output<number>();
   readonly settingsChanged = output<{
@@ -665,6 +848,10 @@ export class SectionQueueComponent {
   readonly jumpRowInput = signal<number | null>(null);
   readonly mobileTab = signal<'queue' | 'settings'>('queue');
   protected readonly Math = Math;
+
+  readonly upcomingStrip = computed(() =>
+    this.engine.getUpcomingRowStrip(this.project(), 50),
+  );
 
   readonly totalStitches = computed(() => this.project().width * this.project().height);
   readonly progressPercent = computed(() => {
