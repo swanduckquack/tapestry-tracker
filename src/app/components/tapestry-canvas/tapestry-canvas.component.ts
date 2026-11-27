@@ -20,53 +20,61 @@ import { SectionEngineService } from '../../services/section-engine.service';
   standalone: true,
   template: `
     <div class="canvas-shell">
-      <div class="canvas-toolbar">
-        <div class="toolbar-group">
-          <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(1.35)" title="Zoom in">
-            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path d="M8 3.5v9M3.5 8h9" stroke-linecap="round" />
-            </svg>
-          </button>
-          <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(0.75)" title="Zoom out">
-            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path d="M3.5 8h9" stroke-linecap="round" />
-            </svg>
-          </button>
-          <button type="button" class="tool-btn" (click)="fitToView()" title="Fit whole tapestry">
-            Fit
-          </button>
-          <button
-            type="button"
-            class="tool-btn"
-            (click)="centerOnActive()"
-            [disabled]="sections().length === 0"
-            title="Zoom to current section"
-          >
-            Locate
-          </button>
-          <button
-            type="button"
-            class="tool-btn"
-            [class.active]="rowFocus()"
-            (click)="toggleRowFocus()"
-            [disabled]="sections().length === 0"
-            title="Dim rows far from your active row"
-          >
-            Focus
-          </button>
-        </div>
-
-        <div class="toolbar-right">
-          <span class="hint-text">Drag to pan · Scroll to zoom · Click stitch to jump</span>
-          <label class="follow-toggle">
-            <input
-              type="checkbox"
-              [checked]="autoFollow()"
-              (change)="autoFollow.set($any($event.target).checked)"
-            />
-            <span>Auto-follow</span>
-          </label>
-        </div>
+      <div class="floating-toolbar">
+        <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(1.35)" title="Zoom in" aria-label="Zoom in">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M8 3.5v9M3.5 8h9" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button type="button" class="tool-btn zoom-btn" (click)="zoomBy(0.75)" title="Zoom out" aria-label="Zoom out">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M3.5 8h9" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button type="button" class="tool-btn" (click)="fitToView()" title="Fit whole tapestry" aria-label="Fit">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2.5 6V3.5a1 1 0 0 1 1-1H6M10 2.5h2.5a1 1 0 0 1 1 1V6M13.5 10v2.5a1 1 0 0 1-1 1H10M6 13.5H3.5a1 1 0 0 1-1-1V10" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="centerOnActive()"
+          [disabled]="sections().length === 0"
+          title="Locate active stitch"
+          aria-label="Locate"
+        >
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="3.5" />
+            <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          [class.active]="rowFocus()"
+          (click)="toggleRowFocus()"
+          [disabled]="sections().length === 0"
+          title="Row focus (dim other rows)"
+          aria-label="Row focus"
+        >
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 8s2.4-4 6-4 6 4 6 4-2.4 4-6 4-6-4-6-4Z" />
+            <circle cx="8" cy="8" r="1.6" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          [class.active]="autoFollow()"
+          (click)="autoFollow.set(!autoFollow())"
+          title="Auto-follow active stitch"
+          aria-label="Auto-follow"
+        >
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2.5 7.5L13.5 2.5l-5 11-1.5-4.5-4.5-1.5Z" stroke-linejoin="round" />
+          </svg>
+        </button>
       </div>
 
       <div
@@ -92,23 +100,24 @@ import { SectionEngineService } from '../../services/section-engine.service';
 
       @if (inspectedCell(); as cell) {
         <div class="inspect-pill">
-          <div class="inspect-info">
-            <span class="swatch" [style.background]="cell.hex"></span>
-            <div>
-              <strong>Row {{ cell.displayRow }}, Col {{ cell.col + 1 }}</strong>
-              <span class="muted"> · {{ cell.colorName }} ({{ cell.symbol }})</span>
-            </div>
-          </div>
-          <div class="inspect-actions">
-            <button type="button" class="jump-btn" (click)="jumpToInspected(cell.linearIndex)">
-              Mark prior complete &amp; jump here
-            </button>
-            <button type="button" class="close-btn" (click)="clearSelection()" aria-label="Close">
-              <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
-              </svg>
-            </button>
-          </div>
+          <span class="swatch" [style.background]="cell.hex"></span>
+          <span class="inspect-coords">R{{ cell.displayRow }} · C{{ cell.col + 1 }}</span>
+          <button
+            type="button"
+            class="jump-btn"
+            (click)="jumpToInspected(cell.linearIndex)"
+            title="Mark all prior stitches complete & jump here"
+            aria-label="Jump here"
+          >
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M3 4.5l4.5 3.5L3 11.5V4.5ZM8.5 4.5L13 8l-4.5 3.5V4.5Z" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button type="button" class="close-btn" (click)="clearSelection()" title="Close" aria-label="Close">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
       }
     </div>
@@ -126,44 +135,34 @@ import { SectionEngineService } from '../../services/section-engine.service';
       border: 1px solid #27272a;
     }
 
-    .canvas-toolbar {
+    .floating-toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #141416;
-      border-bottom: 1px solid #27272a;
-      z-index: 2;
-      flex-wrap: wrap;
-    }
-
-    .toolbar-group,
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .hint-text {
-      font-size: 0.74rem;
-      color: #71717a;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(20, 20, 22, 0.84);
+      backdrop-filter: blur(8px);
+      border: 1px solid #27272a;
+      border-radius: 9px;
+      z-index: 4;
     }
 
     .icon {
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       display: block;
     }
 
     .tool-btn {
-      background: #18181b;
-      color: #e4e4e7;
-      border: 1px solid #27272a;
+      background: transparent;
+      color: #d4d4d8;
+      border: none;
       border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      width: 30px;
+      height: 30px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -172,27 +171,17 @@ import { SectionEngineService } from '../../services/section-engine.service';
 
     .tool-btn:hover:not(:disabled) {
       background: #27272a;
+      color: #ffffff;
     }
 
     .tool-btn.active {
       background: #f4f4f5;
       color: #09090b;
-      border-color: #f4f4f5;
     }
 
     .tool-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
-    }
-
-    .follow-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #a1a1aa;
-      font-size: 0.8rem;
-      cursor: pointer;
-      user-select: none;
     }
 
     .canvas-viewport {
@@ -234,58 +223,48 @@ import { SectionEngineService } from '../../services/section-engine.service';
 
     .inspect-pill {
       position: absolute;
-      bottom: 14px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: #141416;
+      gap: 8px;
+      background: rgba(20, 20, 22, 0.92);
+      backdrop-filter: blur(8px);
       border: 1px solid #3f3f46;
-      border-radius: 10px;
-      padding: 9px 12px;
+      border-radius: 999px;
+      padding: 5px 8px 5px 10px;
       color: #f4f4f5;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-      max-width: calc(100% - 24px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
       z-index: 5;
     }
 
-    .inspect-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.84rem;
+    .inspect-coords {
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: ui-monospace, monospace;
+      white-space: nowrap;
     }
 
     .swatch {
-      width: 20px;
-      height: 20px;
-      border-radius: 5px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.25);
       flex-shrink: 0;
-    }
-
-    .muted {
-      color: #a1a1aa;
-    }
-
-    .inspect-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .jump-btn {
       background: #f4f4f5;
       color: #09090b;
       border: none;
-      border-radius: 6px;
-      padding: 6px 11px;
-      font-size: 0.78rem;
-      font-weight: 500;
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .jump-btn:hover {
@@ -296,10 +275,12 @@ import { SectionEngineService } from '../../services/section-engine.service';
       background: transparent;
       color: #a1a1aa;
       border: none;
+      width: 24px;
+      height: 24px;
       cursor: pointer;
-      padding: 4px;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
     }
 
     @media (max-width: 960px) {
@@ -307,20 +288,12 @@ import { SectionEngineService } from '../../services/section-engine.service';
         min-height: 0;
       }
 
-      .canvas-toolbar {
-        position: absolute;
+      .floating-toolbar {
         top: 8px;
         right: 8px;
-        background: rgba(20, 20, 22, 0.86);
-        backdrop-filter: blur(6px);
-        border: 1px solid #27272a;
-        border-radius: 8px;
-        padding: 4px 8px;
-        gap: 8px;
       }
 
-      .zoom-btn,
-      .hint-text {
+      .zoom-btn {
         display: none;
       }
 
@@ -329,15 +302,6 @@ import { SectionEngineService } from '../../services/section-engine.service';
         left: 8px;
         transform: scale(0.68);
         transform-origin: bottom left;
-      }
-
-      .tool-btn {
-        padding: 4px 8px;
-        font-size: 0.74rem;
-      }
-
-      .follow-toggle {
-        font-size: 0.74rem;
       }
     }
   `,

@@ -24,14 +24,10 @@ import { SupabaseService } from './services/supabase.service';
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <svg class="brand-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <svg class="brand-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Tapestry Tracker">
             <rect x="2.5" y="2.5" width="15" height="15" rx="2" />
             <path d="M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15" />
           </svg>
-          <span class="brand-name">Tapestry Tracker</span>
-        </div>
-
-        <div class="topbar-actions">
           @if (store.projects().length > 0) {
             <select
               class="project-select"
@@ -40,38 +36,43 @@ import { SupabaseService } from './services/supabase.service';
               aria-label="Select tapestry project"
             >
               @for (p of store.projects(); track p.id) {
-                <option [value]="p.id">{{ p.name }} ({{ p.width }} × {{ p.height }})</option>
+                <option [value]="p.id">{{ p.name }} ({{ p.width }}×{{ p.height }})</option>
               }
             </select>
+          } @else {
+            <span class="brand-name">Tapestry Tracker</span>
           }
+        </div>
 
-          <button type="button" class="nav-btn primary" (click)="showImport.set(true)" title="Import PDF">
-            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <div class="topbar-actions">
+          <button type="button" class="icon-btn primary" (click)="showImport.set(true)" title="Import Pixel Stitch PDF" aria-label="Import PDF">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
               <path d="M8 3v10M3 8h10" stroke-linecap="round" />
             </svg>
-            <span class="btn-label">Import PDF</span>
           </button>
 
           @if (store.activeProject()) {
-            <button type="button" class="nav-btn" (click)="showLegend.set(true)" title="Yarn Colors">
+            <button type="button" class="icon-btn" (click)="showLegend.set(true)" title="Yarn Colors" aria-label="Yarn Colors">
               <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="5.5" cy="6" r="1.5" />
-                <circle cx="10.5" cy="6" r="1.5" />
-                <circle cx="8" cy="10.5" r="1.5" />
+                <circle cx="5.5" cy="6" r="1.4" />
+                <circle cx="10.5" cy="6" r="1.4" />
+                <circle cx="8" cy="10.5" r="1.4" />
                 <rect x="2" y="2" width="12" height="12" rx="2.5" />
               </svg>
-              <span class="btn-label">Colors ({{ store.activeProject()!.colors.length }})</span>
+              <span class="count-badge">{{ store.activeProject()!.colors.length }}</span>
             </button>
           }
 
-          <button type="button" class="nav-btn" (click)="showAuth.set(true)" title="Sync Settings">
+          <button type="button" class="icon-btn" (click)="showAuth.set(true)" [title]="supabase.isConfigured() ? 'Supabase Sync' : 'Local Only (Configure Sync)'" aria-label="Sync Settings">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4.5 11.5h7.2a2.3 2.3 0 0 0 .3-4.58A3.5 3.5 0 0 0 5.3 5.7 2.8 2.8 0 0 0 4.5 11.5Z" stroke-linejoin="round" />
+            </svg>
             <span
               class="sync-dot"
               [class.synced]="store.syncStatus() === 'synced'"
               [class.syncing]="store.syncStatus() === 'syncing'"
               [class.error]="store.syncStatus() === 'error'"
             ></span>
-            <span class="btn-label">{{ supabase.isConfigured() ? 'Supabase Sync' : 'Local Only' }}</span>
           </button>
         </div>
       </header>
@@ -167,19 +168,22 @@ import { SupabaseService } from './services/supabase.service';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding: 10px 18px;
+      gap: 10px;
+      padding: 6px 12px;
+      height: 46px;
       background: #141416;
       border-bottom: 1px solid #27272a;
-      flex-wrap: wrap;
+      flex-shrink: 0;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+      flex: 1;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       letter-spacing: -0.01em;
       color: #f4f4f5;
     }
@@ -188,19 +192,21 @@ import { SupabaseService } from './services/supabase.service';
       width: 18px;
       height: 18px;
       color: #f4f4f5;
+      flex-shrink: 0;
     }
 
     .icon {
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       flex-shrink: 0;
+      display: block;
     }
 
     .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .project-select {
@@ -208,37 +214,47 @@ import { SupabaseService } from './services/supabase.service';
       color: #f4f4f5;
       border: 1px solid #27272a;
       border-radius: 7px;
-      padding: 6px 10px;
-      font-size: 0.82rem;
+      padding: 5px 9px;
+      font-size: 0.8rem;
       max-width: 240px;
+      min-width: 0;
     }
 
-    .nav-btn {
+    .icon-btn {
+      position: relative;
       background: #18181b;
       color: #e4e4e7;
       border: 1px solid #27272a;
       border-radius: 7px;
-      padding: 6px 11px;
-      font-size: 0.82rem;
-      font-weight: 500;
+      height: 32px;
+      min-width: 32px;
+      padding: 0 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 5px;
     }
 
-    .nav-btn:hover {
+    .icon-btn:hover {
       background: #27272a;
     }
 
-    .nav-btn.primary {
+    .icon-btn.primary {
       background: #f4f4f5;
       border-color: #f4f4f5;
       color: #09090b;
     }
 
-    .nav-btn.primary:hover {
+    .icon-btn.primary:hover {
       background: #e4e4e7;
+    }
+
+    .count-badge {
+      font-size: 0.72rem;
+      color: #a1a1aa;
     }
 
     .sync-dot {
@@ -350,40 +366,9 @@ import { SupabaseService } from './services/supabase.service';
     }
 
     @media (max-width: 960px) {
-      .topbar {
-        padding: 6px 10px;
-        gap: 8px;
-        flex-wrap: nowrap;
-        height: 46px;
-      }
-
-      .brand-name {
-        display: none;
-      }
-
-      .topbar-actions {
-        flex: 1;
-        min-width: 0;
-        flex-wrap: nowrap;
-        justify-content: flex-end;
-        gap: 6px;
-      }
-
       .project-select {
         flex: 1;
-        min-width: 0;
         max-width: none;
-        padding: 5px 8px;
-        font-size: 0.78rem;
-      }
-
-      .nav-btn {
-        padding: 6px 8px;
-        flex-shrink: 0;
-      }
-
-      .btn-label {
-        display: none;
       }
 
       .workspace {
