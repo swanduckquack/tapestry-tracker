@@ -203,10 +203,10 @@ export class SectionEngineService {
     return counts;
   }
 
-  /** Returns a proportional visual strip and per-color stitch counts for the next `windowSize` stitches in the current row. */
+  /** Returns a proportional visual strip and per-color stitch counts for the remaining stitches in the current row. */
   getUpcomingRowStrip(
     project: TapestryProject,
-    windowSize = 50,
+    windowSize = Infinity,
   ): {
     runs: Array<{ color: StitchColor; count: number }>;
     totals: Array<{ color: StitchColor; count: number }>;

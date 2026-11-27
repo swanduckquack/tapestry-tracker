@@ -33,7 +33,7 @@ import { WakeLockService } from '../../services/wake-lock.service';
         @if (upcomingStrip().totalStitches > 0) {
           <div class="strip-wrap">
             <div class="strip-header">
-              <span>Next {{ upcomingStrip().totalStitches }} stitches in row</span>
+              <span>Remaining in row ({{ upcomingStrip().totalStitches }})</span>
               <div class="strip-totals">
                 @for (t of upcomingStrip().totals; track t.color.id) {
                   <span class="strip-total-pill" [title]="t.color.name">
@@ -850,7 +850,7 @@ export class SectionQueueComponent {
   protected readonly Math = Math;
 
   readonly upcomingStrip = computed(() =>
-    this.engine.getUpcomingRowStrip(this.project(), 50),
+    this.engine.getUpcomingRowStrip(this.project()),
   );
 
   readonly totalStitches = computed(() => this.project().width * this.project().height);
