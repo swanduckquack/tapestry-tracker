@@ -151,6 +151,29 @@ import { WakeLockService } from '../../services/wake-lock.service';
             }
           </div>
 
+          @if (underneathRuns().length > 0) {
+            <div class="under-wrap" title="Current section (top) aligned over previous row (bottom)">
+              <div
+                class="under-current-bar"
+                [style.background]="color.hex"
+                [class.rtl]="active.rowDirection === 'rtl'"
+              ></div>
+              <div class="under-prev-bar">
+                @for (u of underneathRuns(); track $index) {
+                  <div
+                    class="under-seg"
+                    [style.flex-grow]="u.count"
+                    [style.background]="u.color.hex"
+                    [style.color]="isLightHex(u.color.hex) ? '#18181b' : '#ffffff'"
+                    [title]="'Below: ' + u.count + ' × ' + u.color.name"
+                  >
+                    <span>{{ u.count }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           <div class="active-actions">
             <button
               type="button"
@@ -706,6 +729,44 @@ import { WakeLockService } from '../../services/wake-lock.service';
       background: #27272a;
     }
 
+    .under-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #27272a;
+      background: #0d0d0f;
+    }
+
+    .under-current-bar {
+      height: 7px;
+      width: 100%;
+    }
+
+    .under-prev-bar {
+      display: flex;
+      height: 17px;
+      width: 100%;
+    }
+
+    .under-seg {
+      flex-basis: 0;
+      min-width: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: ui-monospace, monospace;
+      border-right: 1px solid rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .under-seg:last-child {
+      border-right: none;
+    }
+
     .active-actions {
       display: flex;
       gap: 8px;
@@ -1060,6 +1121,12 @@ export class SectionQueueComponent {
     const active = this.sections()[0];
     if (!active) return null;
     return this.engine.getNextAppearanceInRow(this.project(), active);
+  });
+
+  readonly underneathRuns = computed(() => {
+    const active = this.sections()[0];
+    if (!active) return [];
+    return this.engine.getUnderneathRuns(this.project(), active);
   });
 
   readonly totalStitches = computed(() => this.project().width * this.project().height);

@@ -299,4 +299,37 @@ export class SectionEngineService {
 
     return { runs, totals, totalStitches: taken };
   }
+
+  /**
+   * Returns the contiguous color runs directly underneath `section` on the previous row,
+   * ordered left-to-right visually (minCol -> maxCol) so they align 1:1 with the tapestry.
+   */
+  getUnderneathRuns(
+    project: TapestryProject,
+    section: StitchSection,
+  ): Array<{ color: StitchColor; count: number }> {
+    const isBottomUp = project.direction.startsWith('bottom-up');
+    const prevRow = isBottomUp ? section.row + 1 : section.row - 1;
+    if (prevRow < 0 || prevRow >= project.height) return [];
+
+    const minCol = Math.min(section.startCol, section.endCol) - 1;
+    const maxCol = Math.max(section.startCol, section.endCol) - 1;
+    const runs: Array<{ color: StitchColor; count: number }> = [];
+
+    for (let c = minCol; c <= maxCol; c++) {
+      const effIdx = this.resolveEffectiveColorIndex(
+        project.colors,
+        project.grid[prevRow * project.width + c] ?? 0,
+      );
+      const color = project.colors[effIdx] ?? project.colors[0];
+      const last = runs[runs.length - 1];
+      if (last && last.color.id === color.id) {
+        last.count++;
+      } else {
+        runs.push({ color, count: 1 });
+      }
+    }
+
+    return runs;
+  }
 }

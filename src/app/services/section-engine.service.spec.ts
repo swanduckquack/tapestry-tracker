@@ -132,4 +132,19 @@ describe('SectionEngineService', () => {
       ['c1', 1, 3],
     ]);
   });
+
+  it('computes underneath runs from the previous row aligned left-to-right', () => {
+    const project = sampleProject({
+      // row 1 (middle): 1, 2, 2, 2
+      // row 2 (bottom): 0, 0, 0, 1
+      completedCount: 5, // middle row, col 1..3 (3 x c2)
+    });
+    const active = service.getUpcomingSections(project, 1)[0];
+    const under = service.getUnderneathRuns(project, active);
+    // Underneath cols 1..3 on row 2 are: col 1 = c0, col 2 = c0, col 3 = c1
+    expect(under.map((u) => [u.color.id, u.count])).toEqual([
+      ['c0', 2],
+      ['c1', 1],
+    ]);
+  });
 });
