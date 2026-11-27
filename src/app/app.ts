@@ -456,13 +456,13 @@ import { SupabaseService } from './services/supabase.service';
       }
 
       .workspace {
-        padding: 8px;
+        padding: 6px;
       }
 
       .split-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: 36dvh 1fr;
-        gap: 8px;
+        grid-template-rows: 30dvh 1fr;
+        gap: 6px;
         height: 100%;
       }
     }

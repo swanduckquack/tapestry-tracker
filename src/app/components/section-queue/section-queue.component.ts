@@ -1008,47 +1008,15 @@ import { WakeLockService } from '../../services/wake-lock.service';
     }
 
     @media (max-width: 960px) and (orientation: portrait), (max-width: 600px) {
+      .queue-panel {
+        gap: 6px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
       .progress-card {
         order: 1;
-        padding: 8px 10px;
-      }
-
-      .panel-tabs {
-        order: 2;
-      }
-
-      .tab-body {
-        order: 3;
-      }
-
-      .active-card,
-      .done-card {
-        order: 4;
-        padding: 10px 12px;
-        gap: 8px;
-        margin-bottom: env(safe-area-inset-bottom, 0px);
-      }
-
-      .big-swatch {
-        width: 42px;
-        height: 42px;
-        font-size: 1.15rem;
-      }
-
-      .stitch-count {
-        font-size: 1.4rem;
-      }
-    }
-
-    @media (max-height: 520px) and (orientation: landscape) {
-      .queue-panel {
-        gap: 5px;
-      }
-
-      .card,
-      .active-card {
-        padding: 7px 9px;
-        gap: 6px;
+        padding: 7px 10px;
       }
 
       .progress-header {
@@ -1056,22 +1024,122 @@ import { WakeLockService } from '../../services/wake-lock.service';
       }
 
       .strip-wrap {
-        margin-top: 5px;
-        gap: 3px;
+        margin-top: 6px;
+        gap: 4px;
+      }
+
+      .strip-totals {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .strip-totals::-webkit-scrollbar {
+        display: none;
+      }
+
+      .strip-total-pill {
+        flex-shrink: 0;
       }
 
       .yarn-strip {
         height: 8px;
       }
 
+      .panel-tabs {
+        order: 2;
+      }
+
+      .tab-btn {
+        height: 30px;
+      }
+
+      .tab-body {
+        order: 3;
+        min-height: 110px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .active-card,
+      .done-card {
+        order: 4;
+        padding: 8px 10px;
+        gap: 6px;
+        margin-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
       .big-swatch {
-        width: 36px;
-        height: 36px;
-        font-size: 1.05rem;
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
       }
 
       .stitch-count {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
+      }
+
+      .under-current-bar {
+        height: 6px;
+      }
+
+      .under-prev-bar {
+        height: 15px;
+      }
+
+      .complete-btn,
+      .undo-btn {
+        height: 38px;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .queue-panel {
+        gap: 5px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .card,
+      .active-card {
+        padding: 7px 9px;
+        gap: 5px;
+      }
+
+      .progress-header {
+        margin-bottom: 4px;
+      }
+
+      .strip-wrap {
+        margin-top: 4px;
+        gap: 3px;
+      }
+
+      .strip-totals {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .yarn-strip {
+        height: 7px;
+      }
+
+      .big-swatch {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+      }
+
+      .stitch-count {
+        font-size: 1.2rem;
+      }
+
+      .under-current-bar {
+        height: 5px;
+      }
+
+      .under-prev-bar {
+        height: 14px;
       }
 
       .complete-btn,
@@ -1081,6 +1149,10 @@ import { WakeLockService } from '../../services/wake-lock.service';
 
       .tab-btn {
         height: 28px;
+      }
+
+      .tab-body {
+        min-height: 90px;
       }
     }
   `,
