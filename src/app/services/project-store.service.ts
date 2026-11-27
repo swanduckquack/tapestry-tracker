@@ -6,6 +6,7 @@ import { SupabaseService } from './supabase.service';
 
 const LOCAL_PROJECTS_KEY = 'tapestry_projects_v1';
 const ACTIVE_PROJECT_KEY = 'tapestry_active_project_id';
+const CM_PER_STITCH_KEY = 'tapestry_cm_per_stitch';
 
 interface StoredProjectDto {
   id: string;
@@ -44,6 +45,7 @@ export class ProjectStoreService {
   readonly activeProjectId = signal<string | null>(null);
   readonly undoStack = signal<number[]>([]);
   readonly syncStatus = signal<'local' | 'syncing' | 'synced' | 'error'>('local');
+  readonly cmPerStitch = signal<number>(this.loadCmPerStitch());
 
   readonly activeProject = computed(() => {
     const id = this.activeProjectId();
@@ -148,6 +150,17 @@ export class ProjectStoreService {
     name?: string;
   }): void {
     this.patchActiveProject(patch);
+  }
+
+  setCmPerStitch(cm: number): void {
+    const clean = Math.max(0, Math.min(50, Number.isFinite(cm) ? cm : 0));
+    this.cmPerStitch.set(clean);
+    localStorage.setItem(CM_PER_STITCH_KEY, String(clean));
+  }
+
+  private loadCmPerStitch(): number {
+    const raw = Number(localStorage.getItem(CM_PER_STITCH_KEY));
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
   }
 
   renameColor(colorId: string, newName: string): void {

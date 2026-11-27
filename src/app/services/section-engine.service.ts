@@ -203,12 +203,45 @@ export class SectionEngineService {
     return counts;
   }
 
+  /** Finds how many stitches until the active section's color appears again in the same row, or null if it's the last in the row. */
+  getNextAppearanceInRow(
+    project: TapestryProject,
+    section: StitchSection,
+  ): { gapStitches: number } | null {
+    const total = project.width * project.height;
+    let cursor = section.endIndex;
+    let gap = 0;
+
+    while (cursor < total) {
+      const cell = this.linearToCell(cursor, project.width, project.height, project.direction);
+      if (cell.row !== section.row) break;
+
+      const effIdx = this.resolveEffectiveColorIndex(
+        project.colors,
+        project.grid[cell.row * project.width + cell.col] ?? 0,
+      );
+      if (effIdx === section.colorIndex) {
+        return { gapStitches: gap };
+      }
+      gap++;
+      cursor++;
+    }
+    return null;
+  }
+
   /** Returns a proportional visual strip and per-color stitch counts for the remaining stitches in the current row. */
   getUpcomingRowStrip(
     project: TapestryProject,
     windowSize = Infinity,
   ): {
-    runs: Array<{ color: StitchColor; count: number }>;
+    runs: Array<{
+      color: StitchColor;
+      count: number;
+      startRow: number;
+      startCol: number;
+      endCol: number;
+      offsetFromNow: number;
+    }>;
     totals: Array<{ color: StitchColor; count: number }>;
     totalStitches: number;
   } {
@@ -219,7 +252,14 @@ export class SectionEngineService {
     }
 
     const firstCell = this.linearToCell(start, project.width, project.height, project.direction);
-    const runs: Array<{ color: StitchColor; count: number }> = [];
+    const runs: Array<{
+      color: StitchColor;
+      count: number;
+      startRow: number;
+      startCol: number;
+      endCol: number;
+      offsetFromNow: number;
+    }> = [];
     const countByColor = new Map<number, number>();
     let cursor = start;
     let taken = 0;
@@ -237,8 +277,16 @@ export class SectionEngineService {
       const lastRun = runs[runs.length - 1];
       if (lastRun && lastRun.color.id === color.id) {
         lastRun.count++;
+        lastRun.endCol = cell.col;
       } else {
-        runs.push({ color, count: 1 });
+        runs.push({
+          color,
+          count: 1,
+          startRow: cell.row,
+          startCol: cell.col,
+          endCol: cell.col,
+          offsetFromNow: taken,
+        });
       }
       countByColor.set(effIdx, (countByColor.get(effIdx) ?? 0) + 1);
       cursor++;

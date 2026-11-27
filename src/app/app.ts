@@ -81,6 +81,7 @@ import { SupabaseService } from './services/supabase.service';
           <div class="split-layout">
             <section class="canvas-pane">
               <app-tapestry-canvas
+                #canvasComp
                 [project]="project"
                 [sections]="store.upcomingSections()"
                 (jumpRequested)="store.jumpToCount($event)"
@@ -92,10 +93,13 @@ import { SupabaseService } from './services/supabase.service';
                 [project]="project"
                 [sections]="store.upcomingSections()"
                 [canUndo]="store.undoStack().length > 0"
+                [cmPerStitch]="store.cmPerStitch()"
                 (completeClicked)="store.completeCurrentSection()"
                 (advanceStitchesClicked)="store.advanceStitches($event)"
                 (undoClicked)="store.undo()"
                 (jumpToCountClicked)="store.jumpToCount($event)"
+                (cmPerStitchChanged)="store.setCmPerStitch($event)"
+                (stripSegmentClicked)="canvasComp.focusOnCell($event.row, $event.col)"
                 (settingsChanged)="store.updateProjectSettings($event)"
               />
             </aside>

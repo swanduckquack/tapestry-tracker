@@ -44,21 +44,26 @@ import { WakeLockService } from '../../services/wake-lock.service';
                     >
                       {{ t.color.symbol }}
                     </span>
-                    {{ t.count }}
+                    {{ t.count }}@if (cmPerStitch() > 0) {<span class="len-hint">· {{ formatYarnLen(t.count) }}</span>}
                   </span>
                 }
               </div>
             </div>
-            <div class="yarn-strip" role="img" aria-label="Upcoming stitches color strip">
+            <div class="yarn-strip" role="img" aria-label="Remaining stitches color strip">
               @for (run of upcomingStrip().runs; track $index) {
-                <div
+                <button
+                  type="button"
                   class="strip-seg"
                   [style.flex-grow]="run.count"
                   [style.background]="run.color.hex"
-                  [title]="run.count + ' × ' + run.color.name"
-                ></div>
+                  [title]="run.count + ' × ' + run.color.name + (run.offsetFromNow > 0 ? ' (in ' + run.offsetFromNow + ' st)' : ' (now)')"
+                  (click)="onStripClick(run)"
+                ></button>
               }
             </div>
+            @if (selectedStripInfo(); as info) {
+              <div class="strip-readout">{{ info }}</div>
+            }
           </div>
         }
       </div>
@@ -89,8 +94,16 @@ import { WakeLockService } from '../../services/wake-lock.service';
               <div class="stitch-count">
                 {{ active.count }}
                 <span>{{ active.count === 1 ? 'stitch' : 'stitches' }}</span>
+                @if (cmPerStitch() > 0) {
+                  <span class="len-badge">~{{ formatYarnLen(active.count) }}</span>
+                }
               </div>
-              <div class="color-name">{{ color.name }}</div>
+              <div class="color-meta-line">
+                <span class="color-name">{{ color.name }}</span>
+                <span class="carry-badge" [class.drop]="!nextAppearance()">
+                  {{ nextAppearance() ? 'Again in ' + nextAppearance()!.gapStitches + ' st' : 'Last in row' }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -279,6 +292,23 @@ import { WakeLockService } from '../../services/wake-lock.service';
           </div>
         </div>
 
+        <div class="control-row">
+          <label for="cmStitch">Yarn / stitch (cm)</label>
+          <div class="jump-row-group">
+            <input
+              id="cmStitch"
+              type="number"
+              min="0"
+              max="50"
+              step="0.5"
+              class="num-input wide"
+              placeholder="0 = off"
+              [ngModel]="cmPerStitch()"
+              (ngModelChange)="cmPerStitchChanged.emit(+$event || 0)"
+            />
+          </div>
+        </div>
+
         @if (wakeLock.isSupported) {
           <div class="control-row">
             <label for="wakeLockToggle">Keep screen awake</label>
@@ -411,8 +441,55 @@ import { WakeLockService } from '../../services/wake-lock.service';
     }
 
     .strip-seg {
-      min-width: 2px;
+      flex-basis: 0;
+      min-width: 4px;
       height: 100%;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .strip-seg:hover {
+      filter: brightness(1.2);
+    }
+
+    .strip-readout {
+      font-size: 0.72rem;
+      color: #a1a1aa;
+    }
+
+    .len-hint {
+      font-weight: 400;
+      color: #a1a1aa;
+      font-size: 0.68rem;
+    }
+
+    .len-badge {
+      font-size: 0.85rem !important;
+      margin-left: 6px;
+      color: #a1a1aa;
+    }
+
+    .color-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 3px;
+    }
+
+    .carry-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #27272a;
+      color: #d4d4d8;
+    }
+
+    .carry-badge.drop {
+      background: rgba(250, 204, 21, 0.14);
+      color: #fde047;
     }
 
     .step-row {
@@ -834,11 +911,14 @@ export class SectionQueueComponent {
   readonly project = input.required<TapestryProject>();
   readonly sections = input<StitchSection[]>([]);
   readonly canUndo = input(false);
+  readonly cmPerStitch = input(0);
 
   readonly completeClicked = output<void>();
   readonly advanceStitchesClicked = output<number>();
   readonly undoClicked = output<void>();
   readonly jumpToCountClicked = output<number>();
+  readonly cmPerStitchChanged = output<number>();
+  readonly stripSegmentClicked = output<{ row: number; col: number }>();
   readonly settingsChanged = output<{
     direction?: StitchDirection;
     maxChunkStitches?: number;
@@ -847,11 +927,37 @@ export class SectionQueueComponent {
 
   readonly jumpRowInput = signal<number | null>(null);
   readonly mobileTab = signal<'queue' | 'settings'>('queue');
+  readonly selectedStripInfo = signal<string | null>(null);
   protected readonly Math = Math;
 
   readonly upcomingStrip = computed(() =>
     this.engine.getUpcomingRowStrip(this.project()),
   );
+
+  readonly nextAppearance = computed(() => {
+    const active = this.sections()[0];
+    if (!active) return null;
+    return this.engine.getNextAppearanceInRow(this.project(), active);
+  });
+
+  onStripClick(run: {
+    color: { name: string };
+    count: number;
+    startRow: number;
+    startCol: number;
+    endCol: number;
+    offsetFromNow: number;
+  }): void {
+    const when = run.offsetFromNow === 0 ? 'starts now' : `in ${run.offsetFromNow} st`;
+    this.selectedStripInfo.set(`${run.count} × ${run.color.name} · ${when}`);
+    const midCol = Math.round((run.startCol + run.endCol) / 2);
+    this.stripSegmentClicked.emit({ row: run.startRow, col: midCol });
+  }
+
+  formatYarnLen(stitches: number): string {
+    const cm = Math.round(stitches * this.cmPerStitch());
+    return cm >= 100 ? `${(cm / 100).toFixed(1)}m` : `${cm}cm`;
+  }
 
   readonly totalStitches = computed(() => this.project().width * this.project().height);
   readonly progressPercent = computed(() => {

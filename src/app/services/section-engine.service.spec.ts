@@ -103,4 +103,33 @@ describe('SectionEngineService', () => {
     const decoded = service.decodeGridRle(rle, grid.length);
     expect(decoded).toEqual(grid);
   });
+
+  it('computes next appearance in row and remaining row strip', () => {
+    const project = sampleProject({
+      // bottom row: 0, 0, 0, 1 (RTL: 1, 0, 0, 0)
+      // top row:    0, 0, 1, 1
+      // middle row: 1, 2, 2, 2 (LTR: 1, 2, 2, 2)
+      grid: [
+        0, 0, 1, 1,
+        1, 2, 2, 2,
+        1, 0, 0, 1,
+      ],
+      completedCount: 0,
+    });
+    const sections = service.getUpcomingSections(project, 5);
+    // Active is col 3 (c1, count 1); then cols 2,1 (c0, count 2); then col 0 (c1, count 1)
+    const nextApp = service.getNextAppearanceInRow(project, sections[0]);
+    expect(nextApp).toEqual({ gapStitches: 2 });
+
+    // Second section (c0) is last c0 in that row
+    expect(service.getNextAppearanceInRow(project, sections[1])).toBeNull();
+
+    const strip = service.getUpcomingRowStrip(project);
+    expect(strip.totalStitches).toBe(4);
+    expect(strip.runs.map((r) => [r.color.id, r.count, r.offsetFromNow])).toEqual([
+      ['c1', 1, 0],
+      ['c0', 2, 1],
+      ['c1', 1, 3],
+    ]);
+  });
 });

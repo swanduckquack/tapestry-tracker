@@ -44,6 +44,16 @@ import { SectionEngineService } from '../../services/section-engine.service';
           >
             Locate
           </button>
+          <button
+            type="button"
+            class="tool-btn"
+            [class.active]="rowFocus()"
+            (click)="toggleRowFocus()"
+            [disabled]="sections().length === 0"
+            title="Dim rows far from your active row"
+          >
+            Focus
+          </button>
         </div>
 
         <div class="toolbar-right">
@@ -162,6 +172,12 @@ import { SectionEngineService } from '../../services/section-engine.service';
 
     .tool-btn:hover:not(:disabled) {
       background: #27272a;
+    }
+
+    .tool-btn.active {
+      background: #f4f4f5;
+      color: #09090b;
+      border-color: #f4f4f5;
     }
 
     .tool-btn:disabled {
@@ -338,6 +354,7 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('minimap') minimapRef!: ElementRef<HTMLCanvasElement>;
 
   readonly autoFollow = signal(true);
+  readonly rowFocus = signal(false);
   readonly inspectedCell = signal<{
     row: number;
     displayRow: number;
@@ -437,6 +454,24 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
     this.offsetX = rect.width / 2 - (midCell.col + 0.5) * this.scale;
     this.offsetY = rect.height / 2 - (midCell.row + 0.5) * this.scale;
     this.scheduleDraw();
+  }
+
+  toggleRowFocus(): void {
+    this.rowFocus.update((v) => !v);
+    this.scheduleDraw();
+  }
+
+  focusOnCell(row: number, col: number): void {
+    const vp = this.viewportRef?.nativeElement;
+    if (vp) {
+      const rect = vp.getBoundingClientRect();
+      if (this.scale < 10) this.scale = 14;
+      this.offsetX = rect.width / 2 - (col + 0.5) * this.scale;
+      this.offsetY = rect.height / 2 - (row + 0.5) * this.scale;
+    }
+    this.selectCell(row, col);
+    this.draw();
+    this.drawMinimap();
   }
 
   zoomBy(factor: number): void {
@@ -630,7 +665,23 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
 
   private selectCell(row: number, col: number): void {
     const proj = this.project();
-    this.selectCell(row, col);
+    const rawIdx = proj.grid[row * proj.width + col] ?? 0;
+    const effIdx = this.engine.resolveEffectiveColorIndex(proj.colors, rawIdx);
+    const color = proj.colors[effIdx] ?? proj.colors[0];
+    const linearIndex = this.engine.cellToLinear(row, col, proj.width, proj.height, proj.direction);
+    const isBottomUp = proj.direction.startsWith('bottom-up');
+    const displayRow = isBottomUp ? proj.height - row : row + 1;
+
+    this.inspectedCell.set({
+      row,
+      displayRow,
+      col,
+      hex: color?.hex ?? '#cccccc',
+      colorName: color?.name ?? 'Unknown',
+      symbol: color?.symbol ?? '?',
+      linearIndex,
+    });
+    this.scheduleDraw();
   }
 
   private ensureCellVisible(row: number, col: number): void {
@@ -663,24 +714,7 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const rawIdx = proj.grid[row * proj.width + col] ?? 0;
-    const effIdx = this.engine.resolveEffectiveColorIndex(proj.colors, rawIdx);
-    const color = proj.colors[effIdx] ?? proj.colors[0];
-    const linearIndex = this.engine.cellToLinear(row, col, proj.width, proj.height, proj.direction);
-
-    const isBottomUp = proj.direction.startsWith('bottom-up');
-    const displayRow = isBottomUp ? proj.height - row : row + 1;
-
-    this.inspectedCell.set({
-      row,
-      displayRow,
-      col,
-      hex: color?.hex ?? '#cccccc',
-      colorName: color?.name ?? 'Unknown',
-      symbol: color?.symbol ?? '?',
-      linearIndex,
-    });
-    this.scheduleDraw();
+    this.selectCell(row, col);
   }
 
   private ensureOffscreenCache(proj: TapestryProject): void {
@@ -847,8 +881,26 @@ export class TapestryCanvasComponent implements AfterViewInit, OnDestroy {
       }
     }
 
-    // 4. Clean single bounding box around the active section
+    // 4. Optional Row Focus dimming (dims rows outside +-3 of active row)
     const activeSec = this.sections()[0];
+    if (this.rowFocus() && activeSec) {
+      const bandTop = Math.max(0, activeSec.row - 3);
+      const bandBottom = Math.min(proj.height, activeSec.row + 4);
+      ctx.fillStyle = 'rgba(10, 10, 12, 0.72)';
+      if (bandTop > 0) {
+        ctx.fillRect(this.offsetX, this.offsetY, proj.width * this.scale, bandTop * this.scale);
+      }
+      if (bandBottom < proj.height) {
+        ctx.fillRect(
+          this.offsetX,
+          this.offsetY + bandBottom * this.scale,
+          proj.width * this.scale,
+          (proj.height - bandBottom) * this.scale,
+        );
+      }
+    }
+
+    // 5. Clean single bounding box around the active section
     if (activeSec) {
       const minCol = Math.min(activeSec.startCol, activeSec.endCol) - 1;
       const maxCol = Math.max(activeSec.startCol, activeSec.endCol) - 1;
