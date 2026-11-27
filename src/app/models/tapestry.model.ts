@@ -8,6 +8,7 @@ export interface StitchColor {
   id: string;
   symbol: string;
   hex: string;
+  originalHex?: string;
   name: string;
   dmcCode?: string;
   mergedIntoId?: string;

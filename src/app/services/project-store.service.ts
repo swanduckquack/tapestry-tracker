@@ -144,6 +144,37 @@ export class ProjectStoreService {
     this.patchActiveProject({ colors });
   }
 
+  updateColorHex(colorId: string, hex: string): void {
+    const project = this.activeProject();
+    if (!project) return;
+    const normalized = hex.startsWith('#') ? hex.toLowerCase() : `#${hex.toLowerCase()}`;
+    if (!/^#[0-9a-f]{6}$/.test(normalized)) return;
+    const colors = project.colors.map((c) =>
+      c.id === colorId
+        ? { ...c, originalHex: c.originalHex ?? c.hex, hex: normalized }
+        : c,
+    );
+    this.patchActiveProject({ colors });
+  }
+
+  resetColorHex(colorId: string): void {
+    const project = this.activeProject();
+    if (!project) return;
+    const colors = project.colors.map((c) =>
+      c.id === colorId && c.originalHex ? { ...c, hex: c.originalHex } : c,
+    );
+    this.patchActiveProject({ colors });
+  }
+
+  resetAllColors(): void {
+    const project = this.activeProject();
+    if (!project) return;
+    const colors = project.colors.map((c) =>
+      c.originalHex ? { ...c, hex: c.originalHex } : c,
+    );
+    this.patchActiveProject({ colors });
+  }
+
   mergeColors(sourceColorId: string, targetColorId: string | undefined): void {
     const project = this.activeProject();
     if (!project || sourceColorId === targetColorId) return;

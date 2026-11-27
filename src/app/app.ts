@@ -137,6 +137,9 @@ import { SupabaseService } from './services/supabase.service';
         [project]="store.activeProject()!"
         (closed)="showLegend.set(false)"
         (colorRenamed)="store.renameColor($event.colorId, $event.name)"
+        (colorHexChanged)="store.updateColorHex($event.colorId, $event.hex)"
+        (colorReset)="store.resetColorHex($event)"
+        (allColorsReset)="store.resetAllColors()"
         (colorMerged)="store.mergeColors($event.sourceId, $event.targetId)"
       />
     }

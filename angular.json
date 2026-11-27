@@ -58,6 +58,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 8000
+          },
           "configurations": {
             "production": {
               "buildTarget": "tapestry-tracker:build:production"

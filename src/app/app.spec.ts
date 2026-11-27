@@ -19,6 +19,6 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.brand-name')?.textContent).toContain('Tapestry Tracker');
-    expect(compiled.querySelector('h1')?.textContent).toContain('Track your crochet tapestry');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Import a Pixel Stitch pattern');
   });
 });
